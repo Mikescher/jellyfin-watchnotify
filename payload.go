@@ -50,6 +50,7 @@ type WebhookPayload struct {
 type WatchEvent struct {
 	User        string
 	Title       string // short title for SCN, e.g. "The Matrix (1999)" / "Firefly S01E02"
+	EpisodeName string // episode's own title for episodes, e.g. "The Train Job"; "" otherwise
 	JoplinTitle string // watch-log title, e.g. "The Matrix" / "Firefly [S01E02]"
 	ItemType    string
 	Start       time.Time
@@ -138,6 +139,15 @@ func (p WebhookPayload) JoplinTitle() string {
 		return strings.TrimSpace(fmt.Sprintf("%s [%s]", p.SeriesName, p.seasonEpisodeTag()))
 	}
 	return p.Name
+}
+
+// EpisodeName returns the episode's own title (e.g. "The Train Job"), or ""
+// for non-episodes where the item name is already covered by ShortTitle.
+func (p WebhookPayload) EpisodeName() string {
+	if p.IsEpisode() {
+		return strings.TrimSpace(p.Name)
+	}
+	return ""
 }
 
 // EventTime returns the event time, preferring the server-local Timestamp,

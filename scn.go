@@ -43,6 +43,10 @@ func (c *SCNClient) Send(ctx context.Context, ev WatchEvent) error {
 
 	var b strings.Builder
 	fmt.Fprintf(&b, "What:    %s\n", ev.Title)
+	if ev.EpisodeName != "" {
+		// Second row, indented to align with the "What:" value above.
+		fmt.Fprintf(&b, "         %s\n", ev.EpisodeName)
+	}
 	fmt.Fprintf(&b, "Who:     %s\n", ev.User)
 	fmt.Fprintf(&b, "Started: %s\n", ev.Start.Format(timeLayout))
 	fmt.Fprintf(&b, "Ended:   %s\n", ev.End.Format(timeLayout))

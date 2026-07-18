@@ -142,6 +142,7 @@ func (s *Server) handleStop(p WebhookPayload) {
 	ev := WatchEvent{
 		User:        p.Username(),
 		Title:       p.ShortTitle(),
+		EpisodeName: p.EpisodeName(),
 		JoplinTitle: p.JoplinTitle(),
 		ItemType:    p.ItemType,
 		Start:       start,
