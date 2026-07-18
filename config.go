@@ -36,12 +36,13 @@ func (c SCNConfig) Enabled() bool { return c.UserID != "" && c.Key != "" }
 
 // JoplinConfig configures the Joplin watch-log integration.
 type JoplinConfig struct {
-	BaseURL  string
-	Token    string
-	NoteID   string
-	Anchor   string
-	Position string
-	Accounts AccountSet
+	BaseURL      string
+	Token        string
+	NoteID       string
+	Anchor       string
+	Position     string
+	EmptylineGap int
+	Accounts     AccountSet
 }
 
 // Enabled reports whether the Joplin integration has everything it needs.
@@ -118,13 +119,19 @@ func LoadConfig() (Config, error) {
 		Accounts: parseAccounts(getEnv("SCN_ACCOUNTS", "ALL")),
 	}
 
+	emptylineGap, err := strconv.Atoi(getEnv("JOPLIN_EMPTYLINE_GAP", "0"))
+	if err != nil {
+		return Config{}, fmt.Errorf("invalid JOPLIN_EMPTYLINE_GAP: %w", err)
+	}
+
 	c.Joplin = JoplinConfig{
-		BaseURL:  getEnv("JOPLIN_BASE_URL", "http://10.8.0.4:4466"),
-		Token:    os.Getenv("JOPLIN_TOKEN"),
-		NoteID:   os.Getenv("JOPLIN_NOTE_ID"),
-		Anchor:   os.Getenv("JOPLIN_ANCHOR"),
-		Position: getEnv("JOPLIN_POSITION", "before"),
-		Accounts: parseAccounts(os.Getenv("JOPLIN_ACCOUNTS")),
+		BaseURL:      getEnv("JOPLIN_BASE_URL", "http://10.8.0.4:4466"),
+		Token:        os.Getenv("JOPLIN_TOKEN"),
+		NoteID:       os.Getenv("JOPLIN_NOTE_ID"),
+		Anchor:       os.Getenv("JOPLIN_ANCHOR"),
+		Position:     getEnv("JOPLIN_POSITION", "before"),
+		EmptylineGap: emptylineGap,
+		Accounts:     parseAccounts(os.Getenv("JOPLIN_ACCOUNTS")),
 	}
 
 	// An enabled Joplin integration needs an anchor to insert against; an empty

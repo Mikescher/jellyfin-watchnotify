@@ -34,9 +34,10 @@ func NewJoplinClient(cfg JoplinConfig, logger *slog.Logger) *JoplinClient {
 }
 
 type joplinInsertRequest struct {
-	Content  string `json:"content"`
-	Search   string `json:"search"`
-	Position string `json:"position"`
+	Content            string `json:"content"`
+	Search             string `json:"search"`
+	Position           string `json:"position"`
+	SearchEmptylineGap int    `json:"search_emptyline_gap"`
 }
 
 // Append inserts a watch-log line into the configured note, before the anchor.
@@ -44,9 +45,10 @@ func (c *JoplinClient) Append(ctx context.Context, ev WatchEvent) error {
 	line := formatJoplinLine(ev)
 
 	payload, err := json.Marshal(joplinInsertRequest{
-		Content:  line,
-		Search:   c.cfg.Anchor,
-		Position: c.cfg.Position,
+		Content:            line,
+		Search:             c.cfg.Anchor,
+		Position:           c.cfg.Position,
+		SearchEmptylineGap: c.cfg.EmptylineGap,
 	})
 	if err != nil {
 		return err

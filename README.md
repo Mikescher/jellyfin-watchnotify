@@ -47,6 +47,7 @@ All configuration is via environment variables — see [`.env.example`](.env.exa
 | `JOPLIN_NOTE_ID` | — | Shared note id (required to enable Joplin) |
 | `JOPLIN_ANCHOR` | — | Insert new lines before this marker (required when Joplin is enabled) |
 | `JOPLIN_POSITION` | `before` | `before` / `after` |
+| `JOPLIN_EMPTYLINE_GAP` | `0` | Passed as `search_emptyline_gap`: blank lines kept between the inserted line and the anchor |
 | `JOPLIN_ACCOUNTS` | — | `ALL` or csv of usernames (required to enable Joplin) |
 
 An integration only runs when its required variables are present; the startup log
