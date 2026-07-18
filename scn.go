@@ -30,7 +30,7 @@ func NewSCNClient(cfg SCNConfig, logger *slog.Logger) *SCNClient {
 
 // Send posts a watched-notification to SCN as application/x-www-form-urlencoded.
 func (c *SCNClient) Send(ctx context.Context, ev WatchEvent) error {
-	title := fmt.Sprintf("📺 %s watched %s", ev.User, ev.Title)
+	title := ev.SCNTitle
 
 	device := ev.Device
 	if ev.Client != "" {

@@ -49,7 +49,8 @@ type WebhookPayload struct {
 // that the SCN and Joplin actions consume.
 type WatchEvent struct {
 	User        string
-	Title       string // short title for SCN, e.g. "The Matrix (1999)" / "Firefly S01E02"
+	Title       string // short title for the SCN body and logs, e.g. "The Matrix (1999)" / "Firefly S01E02"
+	SCNTitle    string // SCN push title, e.g. "[👁️] The Matrix" / "[👁️] [S02E13] Firefly"
 	EpisodeName string // episode's own title for episodes, e.g. "The Train Job"; "" otherwise
 	JoplinTitle string // watch-log title, e.g. "The Matrix" / "Firefly [S01E02]"
 	ItemType    string
@@ -121,7 +122,18 @@ func (p WebhookPayload) seasonEpisodeTag() string {
 	return fmt.Sprintf("S%02dE%02d", s, e)
 }
 
-// ShortTitle renders the title used in SCN push notifications.
+// SCNTitle renders the SCN push-notification title, e.g.
+//
+//	"[👁️] The Matrix"          (movie)
+//	"[👁️] [S02E13] Firefly"    (episode)
+func (p WebhookPayload) SCNTitle() string {
+	if p.IsEpisode() {
+		return strings.TrimSpace(fmt.Sprintf("[👁️] [%s] %s", p.seasonEpisodeTag(), p.SeriesName))
+	}
+	return strings.TrimSpace(fmt.Sprintf("[👁️] %s", p.Name))
+}
+
+// ShortTitle renders the short display title used in the SCN body and logs.
 func (p WebhookPayload) ShortTitle() string {
 	switch {
 	case p.IsEpisode():
