@@ -44,7 +44,7 @@ func (c *JoplinClient) Append(ctx context.Context, ev WatchEvent) error {
 	line := formatJoplinLine(ev)
 
 	payload, err := json.Marshal(joplinInsertRequest{
-		Content:  line + "\n",
+		Content:  line,
 		Search:   c.cfg.Anchor,
 		Position: c.cfg.Position,
 	})
