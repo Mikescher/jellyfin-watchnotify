@@ -45,7 +45,7 @@ All configuration is via environment variables — see [`.env.example`](.env.exa
 | `JOPLIN_BASE_URL` | `http://10.8.0.4:4466` | Joplin API server |
 | `JOPLIN_TOKEN` | — | Bearer token (required to enable Joplin) |
 | `JOPLIN_NOTE_ID` | — | Shared note id (required to enable Joplin) |
-| `JOPLIN_ANCHOR` | — | Insert new lines before this marker |
+| `JOPLIN_ANCHOR` | — | Insert new lines before this marker (required when Joplin is enabled) |
 | `JOPLIN_POSITION` | `before` | `before` / `after` |
 | `JOPLIN_ACCOUNTS` | — | `ALL` or csv of usernames (required to enable Joplin) |
 

@@ -80,6 +80,21 @@ func (p WebhookPayload) WatchedFraction() float64 {
 	return float64(p.PlaybackPositionTicks) / float64(p.RunTimeTicks)
 }
 
+// EffectiveProgress returns the fraction, position, and runtime to display.
+// A PlayedToCompletion event is reported as fully watched even when the client
+// reset or under-reported the final position (some clients send position 0 on
+// completion), and any overshoot is clamped to 100%.
+func (p WebhookPayload) EffectiveProgress() (frac float64, pos, runtime time.Duration) {
+	runtime = ticksToDuration(p.RunTimeTicks)
+	pos = ticksToDuration(p.PlaybackPositionTicks)
+	frac = p.WatchedFraction()
+	if p.PlayedToCompletion || frac > 1 {
+		frac = 1
+		pos = runtime
+	}
+	return frac, pos, runtime
+}
+
 // SessionKey identifies a playback session+item for start-time tracking.
 func (p WebhookPayload) SessionKey() string {
 	id := p.SessionId

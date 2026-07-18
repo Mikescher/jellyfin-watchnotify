@@ -127,6 +127,12 @@ func LoadConfig() (Config, error) {
 		Accounts: parseAccounts(os.Getenv("JOPLIN_ACCOUNTS")),
 	}
 
+	// An enabled Joplin integration needs an anchor to insert against; an empty
+	// search would leave the insert position undefined, so fail loudly instead.
+	if c.Joplin.Enabled() && strings.TrimSpace(c.Joplin.Anchor) == "" {
+		return Config{}, fmt.Errorf("JOPLIN_ANCHOR is required when Joplin is enabled")
+	}
+
 	return c, nil
 }
 

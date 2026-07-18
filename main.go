@@ -67,6 +67,10 @@ func main() {
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		logger.Error("shutdown error", "err", err)
 	}
+
+	// Stop accepting webhooks first (above), then cancel any in-flight dispatch
+	// retries and wait for their goroutines to exit.
+	srv.Shutdown()
 }
 
 func newLogger(cfg Config) *slog.Logger {
