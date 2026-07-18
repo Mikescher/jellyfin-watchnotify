@@ -28,7 +28,7 @@ type JoplinClient struct {
 func NewJoplinClient(cfg JoplinConfig, logger *slog.Logger) *JoplinClient {
 	return &JoplinClient{
 		cfg:    cfg,
-		http:   &http.Client{Timeout: 15 * time.Second},
+		http:   &http.Client{Timeout: 10 * time.Minute},
 		logger: logger,
 	}
 }
