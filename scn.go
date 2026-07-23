@@ -62,7 +62,6 @@ func (c *SCNClient) Send(ctx context.Context, ev WatchEvent) error {
 	form.Set("content", b.String())
 	form.Set("priority", strconv.Itoa(c.cfg.Priority))
 	form.Set("sender_name", "jellyfin-watchnotify")
-	form.Set("timestamp", strconv.FormatInt(ev.Start.Unix(), 10))
 	if id := newUUID(); id != "" {
 		form.Set("msg_id", id)
 	}
