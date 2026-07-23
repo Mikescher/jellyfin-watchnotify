@@ -33,7 +33,7 @@ func NewServer(cfg Config, logger *slog.Logger) *Server {
 	ctx, cancel := context.WithCancel(context.Background())
 	s := &Server{
 		cfg:     cfg,
-		tracker: NewTracker(cfg.DedupTTL),
+		tracker: NewTracker(cfg.DedupTTL, cfg.StartCoalesceWindow),
 		logger:  logger,
 		ctx:     ctx,
 		cancel:  cancel,

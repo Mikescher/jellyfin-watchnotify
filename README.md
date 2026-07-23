@@ -38,6 +38,7 @@ All configuration is via environment variables — see [`.env.example`](.env.exa
 | `LOG_FORMAT` | `text` | `text` or `json` |
 | `WATCHED_THRESHOLD` | `0.90` | Watched fraction fallback |
 | `DEDUP_TTL` | `6h` | Duplicate-suppression window |
+| `START_COALESCE_WINDOW` | `10m` | Seeks within this gap keep the original start time |
 | `SCN_USER_ID` / `SCN_KEY` | — | SCN credentials (both required to enable SCN) |
 | `SCN_CHANNEL` | — | Optional SCN channel |
 | `SCN_PRIORITY` | `1` | 0 / 1 / 2 |

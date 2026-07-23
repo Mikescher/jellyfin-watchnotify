@@ -14,8 +14,9 @@ type Config struct {
 	LogLevel  string
 	LogFormat string
 
-	WatchedThreshold float64
-	DedupTTL         time.Duration
+	WatchedThreshold    float64
+	DedupTTL            time.Duration
+	StartCoalesceWindow time.Duration
 
 	SCN    SCNConfig
 	Joplin JoplinConfig
@@ -104,6 +105,16 @@ func LoadConfig() (Config, error) {
 		return Config{}, fmt.Errorf("invalid DEDUP_TTL: %w", err)
 	}
 	c.DedupTTL = ttl
+
+	// Window after the last session activity within which a fresh PlaybackStart
+	// (e.g. from a seek that restarts the stream) is folded into the existing
+	// watch instead of resetting its start time. A start after a longer gap
+	// begins a new session.
+	coalesce, err := time.ParseDuration(getEnv("START_COALESCE_WINDOW", "10m"))
+	if err != nil {
+		return Config{}, fmt.Errorf("invalid START_COALESCE_WINDOW: %w", err)
+	}
+	c.StartCoalesceWindow = coalesce
 
 	priority, err := strconv.Atoi(getEnv("SCN_PRIORITY", "1"))
 	if err != nil {
