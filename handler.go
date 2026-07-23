@@ -124,7 +124,8 @@ func (s *Server) handleStop(p WebhookPayload) {
 		return
 	}
 
-	end := p.EventTime()
+	loc := s.cfg.DisplayLocation
+	end := p.EventTime().In(loc)
 	dispFrac, pos, runtime := p.EffectiveProgress()
 
 	start, ok := s.tracker.PopStart(p.SessionKey())
@@ -137,6 +138,8 @@ func (s *Server) handleStop(p WebhookPayload) {
 			start = end
 		}
 		s.logger.Debug("no recorded start time; using fallback", "item", p.ShortTitle(), "start", start.Format(timeLayout))
+	} else {
+		start = start.In(loc)
 	}
 
 	ev := WatchEvent{

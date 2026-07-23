@@ -162,13 +162,16 @@ func (p WebhookPayload) EpisodeName() string {
 	return ""
 }
 
-// EventTime returns the event time, preferring the server-local Timestamp,
-// then UtcTimestamp, then the current time.
+// EventTime returns the instant of the event, preferring the unambiguous
+// UtcTimestamp, then the server-local Timestamp, then the current time. The
+// server-local Timestamp is often naive (no offset), which parseJellyfinTime
+// reads as UTC — wrong unless the Jellyfin host runs in UTC — so UtcTimestamp
+// is the reliable source. Callers convert the result to the display timezone.
 func (p WebhookPayload) EventTime() time.Time {
-	if t, ok := parseJellyfinTime(p.Timestamp); ok {
+	if t, ok := parseJellyfinTime(p.UtcTimestamp); ok {
 		return t
 	}
-	if t, ok := parseJellyfinTime(p.UtcTimestamp); ok {
+	if t, ok := parseJellyfinTime(p.Timestamp); ok {
 		return t
 	}
 	return time.Now()

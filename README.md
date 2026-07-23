@@ -36,6 +36,7 @@ All configuration is via environment variables — see [`.env.example`](.env.exa
 | `PORT` | `80` | Listen port |
 | `LOG_LEVEL` | `info` | `debug` logs full raw payloads |
 | `LOG_FORMAT` | `text` | `text` or `json` |
+| `DISPLAY_TZ` | `Europe/Berlin` | IANA timezone for rendered watch start/end times |
 | `WATCHED_THRESHOLD` | `0.90` | Watched fraction fallback |
 | `DEDUP_TTL` | `6h` | Duplicate-suppression window |
 | `START_COALESCE_WINDOW` | `10m` | Seeks within this gap keep the original start time |

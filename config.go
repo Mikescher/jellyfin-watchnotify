@@ -6,6 +6,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	// Embed the IANA timezone database so DISPLAY_TZ (e.g. Europe/Berlin)
+	// resolves even on minimal images that ship no system tzdata. Acts as a
+	// fallback; the OS database is still preferred when present.
+	_ "time/tzdata"
 )
 
 // Config holds the full runtime configuration, parsed from environment variables.
@@ -17,6 +22,7 @@ type Config struct {
 	WatchedThreshold    float64
 	DedupTTL            time.Duration
 	StartCoalesceWindow time.Duration
+	DisplayLocation     *time.Location
 
 	SCN    SCNConfig
 	Joplin JoplinConfig
@@ -115,6 +121,15 @@ func LoadConfig() (Config, error) {
 		return Config{}, fmt.Errorf("invalid START_COALESCE_WINDOW: %w", err)
 	}
 	c.StartCoalesceWindow = coalesce
+
+	// Timezone that watch start/end times are rendered in. Jellyfin timestamps
+	// are normalized to a UTC instant, then converted to this zone for display.
+	tzName := getEnv("DISPLAY_TZ", "Europe/Berlin")
+	loc, err := time.LoadLocation(tzName)
+	if err != nil {
+		return Config{}, fmt.Errorf("invalid DISPLAY_TZ %q: %w", tzName, err)
+	}
+	c.DisplayLocation = loc
 
 	priority, err := strconv.Atoi(getEnv("SCN_PRIORITY", "1"))
 	if err != nil {
