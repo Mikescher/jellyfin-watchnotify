@@ -1,3 +1,4 @@
+using Jellyfin.Plugin.WatchNotify.Dispatch;
 using Jellyfin.Plugin.WatchNotify.Logging;
 using Jellyfin.Plugin.WatchNotify.Watch;
 using MediaBrowser.Controller;
@@ -16,6 +17,9 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
     {
         serviceCollection.AddSingleton<EventLogStore>();
         serviceCollection.AddSingleton<SessionTracker>();
+        serviceCollection.AddSingleton<ScnClient>();
+        serviceCollection.AddSingleton<JoplinClient>();
+        serviceCollection.AddSingleton<DispatchQueue>();
         serviceCollection.AddHostedService<WatchNotifyEntryPoint>();
     }
 }

@@ -2,6 +2,8 @@
      data-controller="__plugin/WatchNotify.js">
     <div data-role="content">
         <div class="content-primary">
+            <div id="watchNotifyWarnings" class="hide" style="margin-bottom: 1em;"></div>
+
             <form id="watchNotifyConfigForm">
 
                 <div class="verticalSection">
@@ -77,6 +79,11 @@
                     </label>
 
                     <div id="ScnUserList" class="checkboxList" style="margin-bottom: 1em;"></div>
+
+                    <button is="emby-button" type="button" id="TestScn" class="raised block">
+                        <span>Send test push</span>
+                    </button>
+                    <div class="fieldDescription">Uses the settings as last saved.</div>
                 </div>
 
                 <div class="verticalSection">
@@ -122,6 +129,11 @@
                     </label>
 
                     <div id="JoplinUserList" class="checkboxList" style="margin-bottom: 1em;"></div>
+
+                    <button is="emby-button" type="button" id="TestJoplin" class="raised block">
+                        <span>Append test line</span>
+                    </button>
+                    <div class="fieldDescription">Uses the settings as last saved.</div>
                 </div>
 
                 <div class="verticalSection">

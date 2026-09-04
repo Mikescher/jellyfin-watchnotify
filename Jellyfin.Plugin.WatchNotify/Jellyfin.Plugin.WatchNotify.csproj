@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- The server supplies these at runtime; shipping copies would shadow its own. -->
     <PackageReference Include="Jellyfin.Controller" Version="10.11.11">
       <ExcludeAssets>runtime</ExcludeAssets>

@@ -35,6 +35,44 @@ export default function (view) {
     const form = view.querySelector('#watchNotifyConfigForm');
     const scnUserList = view.querySelector('#ScnUserList');
     const joplinUserList = view.querySelector('#JoplinUserList');
+    const warnings = view.querySelector('#watchNotifyWarnings');
+
+    function refreshStatus() {
+        return ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('WatchNotify/Status'),
+            dataType: 'json'
+        }).then((status) => {
+            const messages = (status.Warnings || []).slice();
+            if (status.LastError) {
+                messages.push('Last delivery error: ' + status.LastError);
+            }
+            if (status.QueueDepth > 0) {
+                messages.push(status.QueueDepth + ' notification(s) still queued for delivery.');
+            }
+
+            warnings.innerHTML = messages.map((m) => '<div>' + escapeHtml(m) + '</div>').join('');
+            warnings.classList.toggle('hide', messages.length === 0);
+        }).catch(() => {
+            warnings.classList.add('hide');
+        });
+    }
+
+    function runTest(target) {
+        Dashboard.showLoadingMsg();
+        ApiClient.ajax({
+            type: 'POST',
+            url: ApiClient.getUrl('WatchNotify/Test', { target: target }),
+            dataType: 'json'
+        }).then((result) => {
+            Dashboard.hideLoadingMsg();
+            Dashboard.alert({ title: 'WatchNotify', message: result.Message });
+            refreshStatus();
+        }).catch(() => {
+            Dashboard.hideLoadingMsg();
+            Dashboard.alert({ title: 'WatchNotify', message: 'The test request failed.' });
+        });
+    }
 
     function syncUserListVisibility() {
         scnUserList.classList.toggle('hide', view.querySelector('#ScnAllUsers').checked);
@@ -75,6 +113,7 @@ export default function (view) {
                 view.querySelector('#WriteToActivityLog').checked = config.WriteToActivityLog;
 
                 syncUserListVisibility();
+                refreshStatus();
                 Dashboard.hideLoadingMsg();
             })
             .catch(() => Dashboard.hideLoadingMsg());
@@ -112,12 +151,17 @@ export default function (view) {
             config.EventLogSize = parseInt(view.querySelector('#EventLogSize').value, 10);
             config.WriteToActivityLog = view.querySelector('#WriteToActivityLog').checked;
 
-            ApiClient.updatePluginConfiguration(pluginId, config)
-                .then((result) => Dashboard.processPluginConfigurationUpdateResult(result));
+            ApiClient.updatePluginConfiguration(pluginId, config).then((result) => {
+                Dashboard.processPluginConfigurationUpdateResult(result);
+                refreshStatus();
+            });
         });
     }
 
     view.addEventListener('viewshow', load);
+
+    view.querySelector('#TestScn').addEventListener('click', () => runTest('scn'));
+    view.querySelector('#TestJoplin').addEventListener('click', () => runTest('joplin'));
 
     view.querySelector('#ScnAllUsers').addEventListener('change', syncUserListVisibility);
     view.querySelector('#JoplinAllUsers').addEventListener('change', syncUserListVisibility);

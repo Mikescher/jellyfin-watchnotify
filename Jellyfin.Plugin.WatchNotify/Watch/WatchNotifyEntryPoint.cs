@@ -1,4 +1,5 @@
 using Jellyfin.Plugin.WatchNotify.Configuration;
+using Jellyfin.Plugin.WatchNotify.Dispatch;
 using Jellyfin.Plugin.WatchNotify.Logging;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
@@ -30,6 +31,7 @@ public sealed class WatchNotifyEntryPoint : IHostedService, IDisposable
     private readonly ILibraryManager _libraryManager;
     private readonly IUserManager _userManager;
     private readonly SessionTracker _tracker;
+    private readonly DispatchQueue _dispatch;
     private readonly EventLogStore _eventLog;
     private readonly ILogger<WatchNotifyEntryPoint> _logger;
     private readonly CancellationTokenSource _cts = new();
@@ -44,6 +46,7 @@ public sealed class WatchNotifyEntryPoint : IHostedService, IDisposable
     /// <param name="libraryManager">The library manager.</param>
     /// <param name="userManager">The user manager.</param>
     /// <param name="tracker">The session tracker.</param>
+    /// <param name="dispatch">The outbound dispatch queue.</param>
     /// <param name="eventLog">The plugin's event log.</param>
     /// <param name="logger">The logger.</param>
     public WatchNotifyEntryPoint(
@@ -52,6 +55,7 @@ public sealed class WatchNotifyEntryPoint : IHostedService, IDisposable
         ILibraryManager libraryManager,
         IUserManager userManager,
         SessionTracker tracker,
+        DispatchQueue dispatch,
         EventLogStore eventLog,
         ILogger<WatchNotifyEntryPoint> logger)
     {
@@ -60,6 +64,7 @@ public sealed class WatchNotifyEntryPoint : IHostedService, IDisposable
         _libraryManager = libraryManager;
         _userManager = userManager;
         _tracker = tracker;
+        _dispatch = dispatch;
         _eventLog = eventLog;
         _logger = logger;
     }
@@ -80,6 +85,7 @@ public sealed class WatchNotifyEntryPoint : IHostedService, IDisposable
             plugin.ConfigurationChanged += OnConfigurationChanged;
         }
 
+        _dispatch.Start(_cts.Token);
         _collector = Task.Run(() => CollectLoopAsync(_cts.Token), CancellationToken.None);
 
         _logger.LogInformation("WatchNotify started");
@@ -101,6 +107,8 @@ public sealed class WatchNotifyEntryPoint : IHostedService, IDisposable
         }
 
         await _cts.CancelAsync().ConfigureAwait(false);
+
+        await _dispatch.StopAsync().ConfigureAwait(false);
 
         if (_collector is not null)
         {
@@ -397,6 +405,8 @@ public sealed class WatchNotifyEntryPoint : IHostedService, IDisposable
             userName,
             title,
             Format.Percent(watchEvent.Fraction));
+
+        _dispatch.Dispatch(config, watchEvent, userId);
     }
 
     /// <summary>

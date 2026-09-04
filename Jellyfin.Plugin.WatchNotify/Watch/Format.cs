@@ -25,7 +25,7 @@ public static class Format
     /// <param name="fraction">The fraction.</param>
     /// <returns>The formatted percentage.</returns>
     public static string Percent(double fraction)
-        => Math.Round(fraction * 100, MidpointRounding.AwayFromZero).ToString("0", CultureInfo.InvariantCulture) + "%";
+        => Math.Round(fraction * 100).ToString("0", CultureInfo.InvariantCulture) + "%";
 
     /// <summary>
     /// Formats a duration as "1h02m03s" or "2m03s".
