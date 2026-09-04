@@ -35,6 +35,12 @@ public class PluginConfiguration : BasePluginConfiguration
     public int RetrySeconds { get; set; } = 30;
 
     /// <summary>
+    /// Gets or sets a value indicating whether marking an item played by hand
+    /// also sends a notification.
+    /// </summary>
+    public bool NotifyOnManualMarkWatched { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether SCN push notifications are sent.
     /// </summary>
     public bool ScnEnabled { get; set; }

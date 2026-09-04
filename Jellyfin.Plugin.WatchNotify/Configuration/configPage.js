@@ -50,6 +50,7 @@ export default function (view) {
                 view.querySelector('#DedupMinutes').value = config.DedupMinutes;
                 view.querySelector('#StartCoalesceMinutes').value = config.StartCoalesceMinutes;
                 view.querySelector('#RetrySeconds').value = config.RetrySeconds;
+                view.querySelector('#NotifyOnManualMarkWatched').checked = config.NotifyOnManualMarkWatched;
 
                 view.querySelector('#ScnEnabled').checked = config.ScnEnabled;
                 view.querySelector('#ScnBaseUrl').value = config.ScnBaseUrl;
@@ -87,6 +88,7 @@ export default function (view) {
             config.DedupMinutes = parseInt(view.querySelector('#DedupMinutes').value, 10);
             config.StartCoalesceMinutes = parseInt(view.querySelector('#StartCoalesceMinutes').value, 10);
             config.RetrySeconds = parseInt(view.querySelector('#RetrySeconds').value, 10);
+            config.NotifyOnManualMarkWatched = view.querySelector('#NotifyOnManualMarkWatched').checked;
 
             config.ScnEnabled = view.querySelector('#ScnEnabled').checked;
             config.ScnBaseUrl = view.querySelector('#ScnBaseUrl').value.trim();
