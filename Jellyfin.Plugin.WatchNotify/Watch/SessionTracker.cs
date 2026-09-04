@@ -139,6 +139,21 @@ public sealed class SessionTracker
     }
 
     /// <summary>
+    /// Reports whether a key was already notified within the dedup window,
+    /// without claiming it.
+    /// </summary>
+    /// <param name="key">The dedup key.</param>
+    /// <param name="ttl">The dedup window.</param>
+    /// <returns>Whether the key is already claimed.</returns>
+    public bool WasNotified(string key, TimeSpan ttl)
+    {
+        lock (_lock)
+        {
+            return _notified.TryGetValue(key, out var last) && DateTime.UtcNow - last < ttl;
+        }
+    }
+
+    /// <summary>
     /// Drops stale entries so neither map grows without bound.
     /// </summary>
     /// <param name="dedupTtl">The dedup window.</param>

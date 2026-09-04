@@ -322,6 +322,17 @@ public sealed class WatchNotifyEntryPoint : IHostedService, IDisposable
             }
 
             var item = e.Item;
+            var config = Config;
+
+            // The stop event usually gets here first and claims the watch; that is
+            // the expected outcome, not something worth logging as a duplicate.
+            if (_tracker.WasNotified(
+                    SessionTracker.DedupKey(e.UserId, item.Id),
+                    TimeSpan.FromMinutes(config.DedupMinutes)))
+            {
+                return;
+            }
+
             var userName = _userManager.GetUserById(e.UserId)?.Username ?? string.Empty;
             var endUtc = DateTime.UtcNow;
             var positionTicks = e.UserData?.PlaybackPositionTicks ?? 0;
@@ -331,7 +342,7 @@ public sealed class WatchNotifyEntryPoint : IHostedService, IDisposable
                 startUtc = EstimateStart(endUtc, positionTicks);
             }
 
-            Complete(Config, item, e.UserId, userName, startUtc, endUtc, positionTicks, playedToCompletion: true, device: null, client: null);
+            Complete(config, item, e.UserId, userName, startUtc, endUtc, positionTicks, playedToCompletion: true, device: null, client: null);
         }
         catch (OperationCanceledException)
         {
