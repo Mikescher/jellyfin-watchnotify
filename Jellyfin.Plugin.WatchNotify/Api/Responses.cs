@@ -32,17 +32,38 @@ public class StatusResponse
 }
 
 /// <summary>
-/// The outcome of a test notification.
+/// The state of a dashboard test send. A test runs in the background, so the
+/// page starts one and then polls this until <see cref="Running"/> clears.
 /// </summary>
-public class TestResponse
+public class TestStatus
 {
     /// <summary>
-    /// Gets or sets a value indicating whether the notification was accepted.
+    /// Gets or sets the integration being exercised.
+    /// </summary>
+    public string Target { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the send is still in flight.
+    /// </summary>
+    public bool Running { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether a finished send was accepted.
     /// </summary>
     public bool Success { get; set; }
 
     /// <summary>
-    /// Gets or sets the result or error text.
+    /// Gets or sets the progress or error text.
     /// </summary>
     public string Message { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets when the send started.
+    /// </summary>
+    public DateTime StartedAt { get; set; }
+
+    /// <summary>
+    /// Gets or sets when the send finished.
+    /// </summary>
+    public DateTime? FinishedAt { get; set; }
 }

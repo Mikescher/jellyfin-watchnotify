@@ -8,6 +8,14 @@
         "category": "Notifications",
         "versions": [
             {
+                "version": "1.0.3.0",
+                "changelog": "Run dashboard test sends in the background and poll for the result, so a slow Joplin insert no longer times out the page.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://raw.githubusercontent.com/Mikescher/jellyfin-watchnotify/master/releases/watchnotify_1.0.3.0.zip",
+                "checksum": "9a7022b18324e88275a5e9e39657c2d8",
+                "timestamp": "2026-09-04T19:56:33Z"
+            },
+            {
                 "version": "1.0.2.0",
                 "changelog": "Bound the Joplin test send to 30s, make the timeout configurable, and report test results unambiguously.",
                 "targetAbi": "10.11.0.0",

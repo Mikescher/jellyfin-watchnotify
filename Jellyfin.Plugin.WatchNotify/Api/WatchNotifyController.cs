@@ -2,7 +2,6 @@ using System.Net.Mime;
 using Jellyfin.Plugin.WatchNotify.Configuration;
 using Jellyfin.Plugin.WatchNotify.Dispatch;
 using Jellyfin.Plugin.WatchNotify.Logging;
-using Jellyfin.Plugin.WatchNotify.Watch;
 using MediaBrowser.Common.Api;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,31 +22,22 @@ namespace Jellyfin.Plugin.WatchNotify.Api;
 [Produces(MediaTypeNames.Application.Json)]
 public class WatchNotifyController : ControllerBase
 {
-    private readonly ScnClient _scn;
-    private readonly JoplinClient _joplin;
     private readonly DispatchQueue _dispatch;
+    private readonly TestRunner _testRunner;
     private readonly EventLogStore _eventLog;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="WatchNotifyController"/> class.
     /// </summary>
-    /// <param name="scn">The push notification client.</param>
-    /// <param name="joplin">The watch-log client.</param>
     /// <param name="dispatch">The outbound dispatch queue.</param>
+    /// <param name="testRunner">Runs dashboard test sends.</param>
     /// <param name="eventLog">The plugin's event log.</param>
-    public WatchNotifyController(ScnClient scn, JoplinClient joplin, DispatchQueue dispatch, EventLogStore eventLog)
+    public WatchNotifyController(DispatchQueue dispatch, TestRunner testRunner, EventLogStore eventLog)
     {
-        _scn = scn;
-        _joplin = joplin;
         _dispatch = dispatch;
+        _testRunner = testRunner;
         _eventLog = eventLog;
     }
-
-    /// <summary>
-    /// A test must answer while someone is watching the dashboard, so it does not
-    /// inherit the generous timeout the background dispatch runs with.
-    /// </summary>
-    private static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(30);
 
     private static PluginConfiguration Config => Plugin.Instance?.Configuration ?? new PluginConfiguration();
 
@@ -113,93 +103,51 @@ public class WatchNotifyController : ControllerBase
     }
 
     /// <summary>
-    /// Sends a synthetic watch notification through one integration and reports the result.
+    /// Starts a test send and returns immediately. A Joplin insert can take
+    /// minutes, so the caller polls <see cref="GetTest"/> for the outcome.
     /// </summary>
     /// <param name="target">Either <c>scn</c> or <c>joplin</c>.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>Whether the notification was accepted.</returns>
+    /// <returns>The state of the test.</returns>
     [HttpPost("Test")]
-    public async Task<ActionResult<TestResponse>> SendTest([FromQuery] string target, CancellationToken cancellationToken)
+    public ActionResult<TestStatus> StartTest([FromQuery] string target)
     {
         var config = Config;
-        var watchEvent = BuildSampleEvent(config);
 
-        try
+        if (string.Equals(target, "scn", StringComparison.OrdinalIgnoreCase))
         {
-            if (string.Equals(target, "scn", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!ScnClient.IsConfigured(config))
-                {
-                    return new TestResponse { Success = false, Message = "SCN is not enabled or not fully configured." };
-                }
-
-                await _scn.SendAsync(config, watchEvent, cancellationToken).ConfigureAwait(false);
-            }
-            else if (string.Equals(target, "joplin", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!JoplinClient.IsConfigured(config))
-                {
-                    return new TestResponse { Success = false, Message = "Joplin is not enabled or not fully configured." };
-                }
-
-                await _joplin.AppendAsync(config, watchEvent, TestTimeout, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                return BadRequest("target must be scn or joplin");
-            }
-        }
-        catch (Exception ex)
-        {
-            _eventLog.Add(
-                string.Equals(target, "scn", StringComparison.OrdinalIgnoreCase) ? EventKinds.ScnFailed : EventKinds.JoplinFailed,
-                watchEvent.User,
-                watchEvent.Title,
-                "Test failed: " + Format.Describe(ex),
-                success: false);
-
-            return new TestResponse { Success = false, Message = Format.Describe(ex) };
+            return ScnClient.IsConfigured(config)
+                ? _testRunner.Start(config, DispatchTarget.Scn)
+                : NotConfigured("SCN", "scn");
         }
 
-        _eventLog.Add(
-            string.Equals(target, "scn", StringComparison.OrdinalIgnoreCase) ? EventKinds.ScnSent : EventKinds.JoplinAppended,
-            watchEvent.User,
-            watchEvent.Title,
-            "Test delivered");
+        if (string.Equals(target, "joplin", StringComparison.OrdinalIgnoreCase))
+        {
+            return JoplinClient.IsConfigured(config)
+                ? _testRunner.Start(config, DispatchTarget.Joplin)
+                : NotConfigured("Joplin", "joplin");
+        }
 
-        return new TestResponse { Success = true, Message = "Delivered." };
+        return BadRequest("target must be scn or joplin");
     }
 
-    private static WatchEvent BuildSampleEvent(PluginConfiguration config)
+    /// <summary>
+    /// Returns the running or most recently finished test send.
+    /// </summary>
+    /// <returns>The state of the test, or no content when none has run.</returns>
+    [HttpGet("Test")]
+    public ActionResult<TestStatus> GetTest()
     {
-        TimeZoneInfo zone;
-        try
-        {
-            zone = TimeZoneInfo.FindSystemTimeZoneById(config.DisplayTimeZone);
-        }
-        catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException)
-        {
-            zone = TimeZoneInfo.Utc;
-        }
-
-        var runtime = TimeSpan.FromMinutes(90);
-        var end = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zone);
-
-        return new WatchEvent
-        {
-            User = "WatchNotify",
-            Title = "WatchNotify test (1999)",
-            ScnTitle = "[👁️] WatchNotify test",
-            EpisodeName = string.Empty,
-            JoplinTitle = "WatchNotify test",
-            ItemType = "Movie",
-            Start = end - runtime,
-            End = end,
-            Fraction = 1,
-            Position = runtime,
-            Runtime = runtime,
-            Device = "Dashboard",
-            Client = "WatchNotify",
-        };
+        var current = _testRunner.Current;
+        return current is null ? NoContent() : current;
     }
+
+    private static TestStatus NotConfigured(string label, string target) => new()
+    {
+        Target = target,
+        Running = false,
+        Success = false,
+        Message = $"{label} is not enabled or not fully configured.",
+        StartedAt = DateTime.UtcNow,
+        FinishedAt = DateTime.UtcNow,
+    };
 }

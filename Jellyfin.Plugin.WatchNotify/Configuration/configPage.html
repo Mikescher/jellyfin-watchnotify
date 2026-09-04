@@ -84,6 +84,7 @@
                         <span>Send test push</span>
                     </button>
                     <div class="fieldDescription">Uses the settings as last saved.</div>
+                    <div id="ScnTestResult" class="fieldDescription"></div>
                 </div>
 
                 <div class="verticalSection">
@@ -125,7 +126,7 @@
 
                     <div class="inputContainer">
                         <input is="emby-input" type="number" id="JoplinTimeoutSeconds" label="Request timeout (seconds)" min="1" step="1" />
-                        <div class="fieldDescription">How long one insert may take. Test sends always use 30 seconds so the page cannot hang.</div>
+                        <div class="fieldDescription">How long one insert may take, for test sends and for real notifications alike.</div>
                     </div>
 
                     <label class="checkboxContainer">
@@ -138,7 +139,8 @@
                     <button is="emby-button" type="button" id="TestJoplin" class="raised block">
                         <span>Append test line</span>
                     </button>
-                    <div class="fieldDescription">Uses the settings as last saved, with a 30 second timeout.</div>
+                    <div class="fieldDescription">Uses the settings as last saved. The insert runs in the background, so this page can be left open while it finishes.</div>
+                    <div id="JoplinTestResult" class="fieldDescription"></div>
                 </div>
 
                 <div class="verticalSection">

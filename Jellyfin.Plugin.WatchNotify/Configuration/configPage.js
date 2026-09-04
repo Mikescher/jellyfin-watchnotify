@@ -1,4 +1,6 @@
 const pluginId = '295982d0-fc94-4c98-9bf4-54bc7cf05b30';
+const testPollMs = 2000;
+const testTimeoutSeconds = 900;
 
 // Jellyfin renders user ids with or without dashes depending on the endpoint, so
 // ids are compared in a canonical form rather than literally.
@@ -72,6 +74,7 @@ export default function (view) {
     const scnUserList = view.querySelector('#ScnUserList');
     const joplinUserList = view.querySelector('#JoplinUserList');
     const warnings = view.querySelector('#watchNotifyWarnings');
+    let testTimer = null;
 
     function refreshStatus() {
         return ApiClient.ajax({
@@ -94,25 +97,69 @@ export default function (view) {
         });
     }
 
-    function runTest(target) {
-        Dashboard.showLoadingMsg();
+    // A Joplin insert can take minutes, so the send runs server-side and the page
+    // polls for its outcome rather than holding a request open.
+    function runTest(target, resultElement) {
+        stopTestPolling();
+        resultElement.textContent = 'Starting…';
+
         ApiClient.ajax({
             type: 'POST',
             url: ApiClient.getUrl('WatchNotify/Test', { target: target }),
             dataType: 'json'
-        }).then((result) => {
-            Dashboard.hideLoadingMsg();
-            const message = (result && result.Message) || 'No response.';
-            Dashboard.alert({
-                title: 'WatchNotify',
-                message: (result && result.Success ? 'Success: ' : 'Failed: ') + message
-            });
-            refreshStatus();
+        }).then((status) => {
+            if (status && status.Running) {
+                pollTest(resultElement, Date.now());
+            } else {
+                showTestResult(resultElement, status);
+            }
         }).catch((err) => {
-            console.error('[WatchNotify] test request failed', err);
-            Dashboard.hideLoadingMsg();
-            Dashboard.alert({ title: 'WatchNotify', message: 'Failed: the request did not complete.' });
+            console.error('[WatchNotify] could not start the test', err);
+            resultElement.textContent = 'Failed: the request did not complete.';
         });
+    }
+
+    function showTestResult(resultElement, status) {
+        const message = (status && status.Message) || 'No response.';
+        resultElement.textContent = (status && status.Success ? 'Success: ' : 'Failed: ') + message;
+        refreshStatus();
+    }
+
+    function pollTest(resultElement, startedAt) {
+        const elapsed = () => Math.round((Date.now() - startedAt) / 1000);
+        resultElement.textContent = 'Sending… 0s';
+
+        testTimer = setInterval(() => {
+            if (elapsed() > testTimeoutSeconds) {
+                stopTestPolling();
+                resultElement.textContent = 'Still running after '
+                    + elapsed() + 's — check the Log tab for the outcome.';
+                return;
+            }
+
+            ApiClient.ajax({
+                type: 'GET',
+                url: ApiClient.getUrl('WatchNotify/Test'),
+                dataType: 'json'
+            }).then((status) => {
+                if (!status || status.Running) {
+                    resultElement.textContent = 'Sending… ' + elapsed() + 's';
+                    return;
+                }
+
+                stopTestPolling();
+                showTestResult(resultElement, status);
+            }).catch((err) => {
+                console.error('[WatchNotify] could not poll the test', err);
+            });
+        }, testPollMs);
+    }
+
+    function stopTestPolling() {
+        if (testTimer !== null) {
+            clearInterval(testTimer);
+            testTimer = null;
+        }
     }
 
     function syncUserListVisibility() {
@@ -211,8 +258,13 @@ export default function (view) {
 
     load();
 
-    view.querySelector('#TestScn').addEventListener('click', () => runTest('scn'));
-    view.querySelector('#TestJoplin').addEventListener('click', () => runTest('joplin'));
+    view.querySelector('#TestScn')
+        .addEventListener('click', () => runTest('scn', view.querySelector('#ScnTestResult')));
+    view.querySelector('#TestJoplin')
+        .addEventListener('click', () => runTest('joplin', view.querySelector('#JoplinTestResult')));
+
+    view.addEventListener('viewhide', stopTestPolling);
+    view.addEventListener('viewdestroy', stopTestPolling);
 
     view.querySelector('#ScnAllUsers').addEventListener('change', syncUserListVisibility);
     view.querySelector('#JoplinAllUsers').addEventListener('change', syncUserListVisibility);

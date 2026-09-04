@@ -20,6 +20,7 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddSingleton<ScnClient>();
         serviceCollection.AddSingleton<JoplinClient>();
         serviceCollection.AddSingleton<DispatchQueue>();
+        serviceCollection.AddSingleton<TestRunner>();
         serviceCollection.AddHostedService<WatchNotifyEntryPoint>();
     }
 }

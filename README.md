@@ -69,6 +69,10 @@ The Joplin line looks like:
 
 ## Log
 
+A Joplin insert can take minutes on a busy note. Both integrations therefore have their own
+queue and consumer, so a slow watch-log append never delays a push, and the dashboard's test
+buttons start the send server-side and poll for its outcome instead of holding the page open.
+
 The plugin's **Log** tab shows a rolling event log — playback starts and stops, watched and
 skipped decisions, and every delivery attempt with its error text. It is persisted under
 `<data>/watchnotify/events.json`, so it survives a restart. Component logs also land in the
