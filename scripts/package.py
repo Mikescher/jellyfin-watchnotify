@@ -18,6 +18,10 @@ MANIFEST = ROOT / "manifest.json"
 ARTIFACTS = ROOT / "artifacts"
 RELEASES = ROOT / "releases"
 ASSEMBLY = "Jellyfin.Plugin.WatchNotify.dll"
+# Rendered from assets/logo.svg; ships in the zip under IMAGE_NAME, which meta.json
+# records as imagePath so the server can serve it for an installed plugin.
+IMAGE = ROOT / "assets" / "logo.png"
+IMAGE_NAME = "logo.png"
 
 GUID = "295982d0-fc94-4c98-9bf4-54bc7cf05b30"
 NAME = "WatchNotify"
@@ -76,6 +80,7 @@ def write_meta(version: str, changelog: str, timestamp: str) -> Path:
         "version": version,
         "timestamp": timestamp,
         "changelog": changelog,
+        "imagePath": IMAGE_NAME,
         "assemblies": [ASSEMBLY],
     }
     path = ARTIFACTS / "publish" / "meta.json"
@@ -85,10 +90,11 @@ def write_meta(version: str, changelog: str, timestamp: str) -> Path:
 
 def write_zip(version: str, dll: Path, meta: Path) -> Path:
     path = ARTIFACTS / f"watchnotify_{version}.zip"
-    # Both files sit at the zip root; the server rejects a nested layout.
+    # Every file sits at the zip root; the server rejects a nested layout.
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
         archive.write(dll, ASSEMBLY)
         archive.write(meta, "meta.json")
+        archive.write(IMAGE, IMAGE_NAME)
     return path
 
 
@@ -115,6 +121,10 @@ def update_manifest(version: str, changelog: str, timestamp: str, checksum: str,
             "versions": [],
         }
         packages.append(package)
+
+    package["imageUrl"] = f"{RAW_URL}/assets/{IMAGE_NAME}"
+    # Re-inserted so the version list stays the last key of the package.
+    package["versions"] = package.pop("versions")
 
     entry = {
         "version": version,
@@ -146,6 +156,9 @@ def main() -> None:
     version = args.version or read_version()
     if not VERSION_RE.match(version):
         sys.exit(f"version must be four numeric parts, got {version!r}")
+
+    if not IMAGE.is_file():
+        sys.exit(f"{IMAGE} is missing; render it with: rsvg-convert -w 1600 -h 900 assets/logo.svg -o {IMAGE}")
 
     if args.version:
         set_version(version)

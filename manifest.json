@@ -6,7 +6,16 @@
         "overview": "Notifies SCN and Joplin when a movie or episode is watched",
         "owner": "Mikescher",
         "category": "Notifications",
+        "imageUrl": "https://raw.githubusercontent.com/Mikescher/jellyfin-watchnotify/master/assets/logo.png",
         "versions": [
+            {
+                "version": "1.0.4.0",
+                "changelog": "Add a plugin logo: it ships in the package and shows up in the plugin catalogue.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://raw.githubusercontent.com/Mikescher/jellyfin-watchnotify/master/releases/watchnotify_1.0.4.0.zip",
+                "checksum": "ac66322ed89c16d4b05e20697373e769",
+                "timestamp": "2026-09-04T21:34:13Z"
+            },
             {
                 "version": "1.0.3.0",
                 "changelog": "Run dashboard test sends in the background and poll for the result, so a slow Joplin insert no longer times out the page.",

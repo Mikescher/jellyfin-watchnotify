@@ -1,5 +1,7 @@
 # jellyfin-watchnotify
 
+<img src="assets/logo.png" alt="WatchNotify" width="560">
+
 A Jellyfin server plugin that watches playback events and, when a movie or episode is
 watched to completion, fires two actions:
 
@@ -89,6 +91,18 @@ make package                                # build artifacts/watchnotify_<versi
 `make deploy` writes to `plugins/Jellyfin.Plugin.WatchNotify_<version>/`; a folder without
 `meta.json` is still loaded, so no packaging step is needed while iterating. Restart the
 server to pick up a new build.
+
+### Logo
+
+`assets/logo.svg` is the source; `assets/logo.png` is the committed 1600×900 render that
+ships in the zip and backs the catalogue entry. After editing the svg:
+
+```sh
+rsvg-convert -w 1600 -h 900 assets/logo.svg -o assets/logo.png
+```
+
+The wordmark is outlined (Adwaita Sans, weight 700), so re-rendering needs no font
+installed — but editing the text means redrawing it from a font again.
 
 ### Release
 

@@ -12,6 +12,7 @@ Joplin watch-log line when a movie or episode is watched to completion.
 - `Dispatch/` — `ScnClient`, `JoplinClient`, `DispatchQueue` (per-target retry loops).
 - `Logging/` — `EventLogStore`, persisted to `<data>/watchnotify/events.json`.
 - `Api/WatchNotifyController.cs` — `/WatchNotify/{Status,Test,Events}`, elevation required.
+- `assets/` — `logo.svg` source (wordmark as outlines) and its `logo.png` render.
 
 ## Key facts
 - "Watched" = `PlayedToCompletion || position/runtime >= WatchedThreshold` (0.90), Movie/Episode only.
@@ -23,6 +24,8 @@ Joplin watch-log line when a movie or episode is watched to completion.
   hyphenated or bare forms work.
 - Controllers must not inject `ILogger<T>` (jellyfin#11488); logging lives in the services.
 - Jellyfin packages carry `ExcludeAssets=runtime`, so the published output is only our dll.
+- The logo reaches the dashboard twice: `logo.png` in the zip named by meta.json's
+  `imagePath`, and the package-level `imageUrl` in `manifest.json` for the catalogue.
 
 ## Build / test
 - `make build`, `make deploy JELLYFIN_CONFIG=…`, `make package`.
