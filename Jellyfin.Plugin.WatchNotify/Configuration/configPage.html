@@ -3,13 +3,142 @@
     <div data-role="content">
         <div class="content-primary">
             <form id="watchNotifyConfigForm">
-                <h2>WatchNotify</h2>
-                <p class="fieldDescription">Configuration follows.</p>
+
+                <div class="verticalSection">
+                    <h2 class="sectionTitle">General</h2>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="DisplayTimeZone" label="Display timezone" />
+                        <div class="fieldDescription">IANA timezone used to render watch start and end times, e.g. <code>Europe/Berlin</code>.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="WatchedThreshold" label="Watched threshold" min="0" max="1" step="0.01" />
+                        <div class="fieldDescription">Fraction of the runtime that counts as watched when the client does not report completion.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="DedupMinutes" label="Dedup window (minutes)" min="0" step="1" />
+                        <div class="fieldDescription">Repeat notifications for the same user and item are suppressed within this window.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="StartCoalesceMinutes" label="Start coalesce window (minutes)" min="0" step="1" />
+                        <div class="fieldDescription">A playback start within this gap after the last activity keeps the original start time instead of beginning a new watch.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="RetrySeconds" label="Retry interval (seconds)" min="1" step="1" />
+                        <div class="fieldDescription">Delay between attempts after a failed send.</div>
+                    </div>
+                </div>
+
+                <div class="verticalSection">
+                    <h2 class="sectionTitle">SCN push</h2>
+
+                    <label class="checkboxContainer">
+                        <input is="emby-checkbox" type="checkbox" id="ScnEnabled" />
+                        <span>Send Simple Cloud Notifier pushes</span>
+                    </label>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="ScnBaseUrl" label="Base url" />
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="ScnUserId" label="User id" />
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="password" id="ScnKey" label="Key" autocomplete="off" />
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="ScnChannel" label="Channel" />
+                        <div class="fieldDescription">Optional. Leave empty for the account's default channel.</div>
+                    </div>
+
+                    <div class="selectContainer">
+                        <select is="emby-select" id="ScnPriority" label="Priority">
+                            <option value="0">0 &ndash; low</option>
+                            <option value="1">1 &ndash; normal</option>
+                            <option value="2">2 &ndash; high</option>
+                        </select>
+                    </div>
+
+                    <label class="checkboxContainer">
+                        <input is="emby-checkbox" type="checkbox" id="ScnAllUsers" />
+                        <span>Notify for all users</span>
+                    </label>
+
+                    <div id="ScnUserList" class="checkboxList" style="margin-bottom: 1em;"></div>
+                </div>
+
+                <div class="verticalSection">
+                    <h2 class="sectionTitle">Joplin watch log</h2>
+
+                    <label class="checkboxContainer">
+                        <input is="emby-checkbox" type="checkbox" id="JoplinEnabled" />
+                        <span>Append watch-log lines to a Joplin note</span>
+                    </label>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="JoplinBaseUrl" label="Base url" />
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="password" id="JoplinToken" label="Token" autocomplete="off" />
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="JoplinNoteId" label="Note id" />
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="JoplinAnchor" label="Anchor" />
+                        <div class="fieldDescription">A text marker inside the note. New lines are inserted relative to it. Required when Joplin is enabled.</div>
+                    </div>
+
+                    <div class="selectContainer">
+                        <select is="emby-select" id="JoplinPosition" label="Insert position">
+                            <option value="before">before the anchor</option>
+                            <option value="after">after the anchor</option>
+                        </select>
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="JoplinEmptylineGap" label="Empty line gap" min="0" step="1" />
+                        <div class="fieldDescription">Blank lines kept between the inserted line and the anchor.</div>
+                    </div>
+
+                    <label class="checkboxContainer">
+                        <input is="emby-checkbox" type="checkbox" id="JoplinAllUsers" />
+                        <span>Log all users</span>
+                    </label>
+
+                    <div id="JoplinUserList" class="checkboxList" style="margin-bottom: 1em;"></div>
+                </div>
+
+                <div class="verticalSection">
+                    <h2 class="sectionTitle">Event log</h2>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="EventLogSize" label="Retained entries" min="0" step="1" />
+                        <div class="fieldDescription">Size of the plugin's own event log, shown on the Log tab.</div>
+                    </div>
+
+                    <label class="checkboxContainer">
+                        <input is="emby-checkbox" type="checkbox" id="WriteToActivityLog" />
+                        <span>Also write notable events to Jellyfin's activity log</span>
+                    </label>
+                </div>
+
                 <div>
                     <button is="emby-button" type="submit" class="raised button-submit block">
                         <span>Save</span>
                     </button>
                 </div>
+
             </form>
         </div>
     </div>
