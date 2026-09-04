@@ -12,17 +12,21 @@ function escapeHtml(s) {
     })[c]);
 }
 
-// jellyfin-web exposes LibraryMenu globally for plugin pages; without it the
-// page still works, so fall back to a plain link bar rather than failing.
-function setupTabs(view, selectedIndex) {
-    const tabs = [
-        { href: Dashboard.getConfigurationPageUrl('WatchNotify'), name: 'Settings' },
-        { href: Dashboard.getConfigurationPageUrl('WatchNotifyLog'), name: 'Log' }
-    ];
+const tabs = [
+    { href: 'configurationpage?name=WatchNotify', name: 'Settings' },
+    { href: 'configurationpage?name=WatchNotifyLog', name: 'Log' }
+];
 
-    if (window.LibraryMenu && typeof window.LibraryMenu.setTabs === 'function') {
-        window.LibraryMenu.setTabs('watchnotify', selectedIndex, () => tabs);
-        return;
+// Navigation is a nice-to-have, so every failure here is swallowed: an exception
+// escaping this would abort the viewshow handler and leave the form unpopulated.
+function setupTabs(view, selectedIndex) {
+    try {
+        if (window.LibraryMenu && typeof window.LibraryMenu.setTabs === 'function') {
+            window.LibraryMenu.setTabs('watchnotify', selectedIndex, () => tabs);
+            return;
+        }
+    } catch (err) {
+        console.error('[WatchNotify] LibraryMenu.setTabs failed', err);
     }
 
     const container = view.querySelector('.content-primary');
@@ -37,6 +41,11 @@ function setupTabs(view, selectedIndex) {
         ? '<strong style="margin-right: 1em;">' + escapeHtml(tab.name) + '</strong>'
         : '<a style="margin-right: 1em;" href="' + escapeHtml(tab.href) + '">' + escapeHtml(tab.name) + '</a>').join('');
     container.insertBefore(bar, container.firstChild);
+}
+
+function numberOr(element, fallback) {
+    const value = Number(element.value);
+    return element.value.trim() === '' || Number.isNaN(value) ? fallback : value;
 }
 
 function renderUserList(container, users, selectedIds) {
@@ -143,17 +152,20 @@ export default function (view) {
                 refreshStatus();
                 Dashboard.hideLoadingMsg();
             })
-            .catch(() => Dashboard.hideLoadingMsg());
+            .catch((err) => {
+                console.error('[WatchNotify] could not load the configuration', err);
+                Dashboard.hideLoadingMsg();
+            });
     }
 
     function save() {
         Dashboard.showLoadingMsg();
         ApiClient.getPluginConfiguration(pluginId).then((config) => {
             config.DisplayTimeZone = view.querySelector('#DisplayTimeZone').value.trim();
-            config.WatchedThreshold = parseFloat(view.querySelector('#WatchedThreshold').value);
-            config.DedupMinutes = parseInt(view.querySelector('#DedupMinutes').value, 10);
-            config.StartCoalesceMinutes = parseInt(view.querySelector('#StartCoalesceMinutes').value, 10);
-            config.RetrySeconds = parseInt(view.querySelector('#RetrySeconds').value, 10);
+            config.WatchedThreshold = numberOr(view.querySelector('#WatchedThreshold'), 0.9);
+            config.DedupMinutes = numberOr(view.querySelector('#DedupMinutes'), 360);
+            config.StartCoalesceMinutes = numberOr(view.querySelector('#StartCoalesceMinutes'), 10);
+            config.RetrySeconds = numberOr(view.querySelector('#RetrySeconds'), 30);
             config.NotifyOnManualMarkWatched = view.querySelector('#NotifyOnManualMarkWatched').checked;
 
             config.ScnEnabled = view.querySelector('#ScnEnabled').checked;
@@ -161,7 +173,7 @@ export default function (view) {
             config.ScnUserId = view.querySelector('#ScnUserId').value.trim();
             config.ScnKey = view.querySelector('#ScnKey').value.trim();
             config.ScnChannel = view.querySelector('#ScnChannel').value.trim();
-            config.ScnPriority = parseInt(view.querySelector('#ScnPriority').value, 10);
+            config.ScnPriority = numberOr(view.querySelector('#ScnPriority'), 1);
             config.ScnAllUsers = view.querySelector('#ScnAllUsers').checked;
             config.ScnUserIds = readUserList(scnUserList);
 
@@ -171,11 +183,11 @@ export default function (view) {
             config.JoplinNoteId = view.querySelector('#JoplinNoteId').value.trim();
             config.JoplinAnchor = view.querySelector('#JoplinAnchor').value;
             config.JoplinPosition = view.querySelector('#JoplinPosition').value;
-            config.JoplinEmptylineGap = parseInt(view.querySelector('#JoplinEmptylineGap').value, 10);
+            config.JoplinEmptylineGap = numberOr(view.querySelector('#JoplinEmptylineGap'), 0);
             config.JoplinAllUsers = view.querySelector('#JoplinAllUsers').checked;
             config.JoplinUserIds = readUserList(joplinUserList);
 
-            config.EventLogSize = parseInt(view.querySelector('#EventLogSize').value, 10);
+            config.EventLogSize = numberOr(view.querySelector('#EventLogSize'), 500);
             config.WriteToActivityLog = view.querySelector('#WriteToActivityLog').checked;
 
             ApiClient.updatePluginConfiguration(pluginId, config).then((result) => {
@@ -186,9 +198,11 @@ export default function (view) {
     }
 
     view.addEventListener('viewshow', function () {
-        setupTabs(view, 0);
         load();
+        setupTabs(view, 0);
     });
+
+    load();
 
     view.querySelector('#TestScn').addEventListener('click', () => runTest('scn'));
     view.querySelector('#TestJoplin').addEventListener('click', () => runTest('joplin'));

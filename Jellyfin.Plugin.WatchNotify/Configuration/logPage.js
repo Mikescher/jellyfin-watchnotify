@@ -17,17 +17,21 @@ function formatTimestamp(value) {
     return isNaN(date.getTime()) ? String(value) : date.toLocaleString();
 }
 
-// jellyfin-web exposes LibraryMenu globally for plugin pages; without it the
-// page still works, so fall back to a plain link bar rather than failing.
-function setupTabs(view, selectedIndex) {
-    const tabs = [
-        { href: Dashboard.getConfigurationPageUrl('WatchNotify'), name: 'Settings' },
-        { href: Dashboard.getConfigurationPageUrl('WatchNotifyLog'), name: 'Log' }
-    ];
+const tabs = [
+    { href: 'configurationpage?name=WatchNotify', name: 'Settings' },
+    { href: 'configurationpage?name=WatchNotifyLog', name: 'Log' }
+];
 
-    if (window.LibraryMenu && typeof window.LibraryMenu.setTabs === 'function') {
-        window.LibraryMenu.setTabs('watchnotify', selectedIndex, () => tabs);
-        return;
+// Navigation is a nice-to-have, so every failure here is swallowed: an exception
+// escaping this would abort the viewshow handler and leave the table empty.
+function setupTabs(view, selectedIndex) {
+    try {
+        if (window.LibraryMenu && typeof window.LibraryMenu.setTabs === 'function') {
+            window.LibraryMenu.setTabs('watchnotify', selectedIndex, () => tabs);
+            return;
+        }
+    } catch (err) {
+        console.error('[WatchNotify] LibraryMenu.setTabs failed', err);
     }
 
     const container = view.querySelector('.content-primary');
@@ -78,7 +82,10 @@ export default function (view) {
             type: 'GET',
             url: ApiClient.getUrl('WatchNotify/Events', query),
             dataType: 'json'
-        }).then(render).catch(() => render([]));
+        }).then(render).catch((err) => {
+            console.error('[WatchNotify] could not load the event log', err);
+            render([]);
+        });
     }
 
     function stopTimer() {
@@ -96,10 +103,12 @@ export default function (view) {
     }
 
     view.addEventListener('viewshow', function () {
-        setupTabs(view, 1);
         load();
         syncTimer();
+        setupTabs(view, 1);
     });
+
+    load();
 
     view.addEventListener('viewhide', stopTimer);
     view.addEventListener('viewdestroy', stopTimer);

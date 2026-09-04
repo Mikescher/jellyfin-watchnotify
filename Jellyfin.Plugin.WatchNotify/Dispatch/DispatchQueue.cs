@@ -37,6 +37,7 @@ public sealed class DispatchQueue
     private readonly ILogger<DispatchQueue> _logger;
 
     private List<Task>? _consumers;
+    private int _depth;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DispatchQueue"/> class.
@@ -54,9 +55,10 @@ public sealed class DispatchQueue
     }
 
     /// <summary>
-    /// Gets the number of watches still waiting to be delivered.
+    /// Gets the number of watches queued or currently being retried. Counted by
+    /// hand because a single-consumer channel does not support Count.
     /// </summary>
-    public int Depth => _queues.Values.Sum(q => q.Reader.Count);
+    public int Depth => Volatile.Read(ref _depth);
 
     /// <summary>
     /// Gets the most recent delivery failure, or null when nothing has failed.
@@ -137,7 +139,10 @@ public sealed class DispatchQueue
             return;
         }
 
-        _queues[target].Writer.TryWrite(watchEvent);
+        if (_queues[target].Writer.TryWrite(watchEvent))
+        {
+            Interlocked.Increment(ref _depth);
+        }
     }
 
     private async Task ConsumeAsync(DispatchTarget target, ChannelReader<WatchEvent> reader, CancellationToken cancellationToken)
@@ -146,7 +151,14 @@ public sealed class DispatchQueue
         {
             await foreach (var watchEvent in reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
             {
-                await DeliverAsync(target, watchEvent, cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    await DeliverAsync(target, watchEvent, cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref _depth);
+                }
             }
         }
         catch (OperationCanceledException)

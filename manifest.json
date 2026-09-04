@@ -8,6 +8,14 @@
         "category": "Notifications",
         "versions": [
             {
+                "version": "1.0.1.0",
+                "changelog": "Fix a 500 on the status endpoint and a broken settings page that never populated its fields.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://raw.githubusercontent.com/Mikescher/jellyfin-watchnotify/master/releases/watchnotify_1.0.1.0.zip",
+                "checksum": "dc999d9d764d381bd788ef06e0aa6e20",
+                "timestamp": "2026-09-04T19:30:20Z"
+            },
+            {
                 "version": "1.0.0.0",
                 "changelog": "First release: SCN push and Joplin watch log as a native Jellyfin plugin.",
                 "targetAbi": "10.11.0.0",
