@@ -1,0 +1,11 @@
+[
+    {
+        "guid": "295982d0-fc94-4c98-9bf4-54bc7cf05b30",
+        "name": "WatchNotify",
+        "description": "Watches playback events and, when a movie or episode is watched to completion, sends a Simple Cloud Notifier push and appends a line to a Joplin watch-log note.",
+        "overview": "Notifies SCN and Joplin when a movie or episode is watched",
+        "owner": "Mikescher",
+        "category": "Notifications",
+        "versions": []
+    }
+]
