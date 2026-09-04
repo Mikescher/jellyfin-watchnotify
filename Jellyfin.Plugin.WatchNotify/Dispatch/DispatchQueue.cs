@@ -185,7 +185,7 @@ public sealed class DispatchQueue
                 }
                 else
                 {
-                    await _joplin.AppendAsync(config, watchEvent, cancellationToken).ConfigureAwait(false);
+                    await _joplin.AppendAsync(config, watchEvent, timeout: null, cancellationToken).ConfigureAwait(false);
                 }
 
                 LastError = null;
@@ -202,12 +202,12 @@ public sealed class DispatchQueue
             }
             catch (Exception ex)
             {
-                LastError = ex.Message;
+                LastError = Format.Describe(ex);
                 _eventLog.Add(
                     target == DispatchTarget.Scn ? EventKinds.ScnFailed : EventKinds.JoplinFailed,
                     watchEvent.User,
                     watchEvent.Title,
-                    $"Attempt {attempt} failed: {ex.Message}",
+                    $"Attempt {attempt} failed: {Format.Describe(ex)}",
                     success: false);
                 _logger.LogWarning(ex, "{Target} delivery attempt {Attempt} failed for {Item}", target, attempt, watchEvent.Title);
             }

@@ -102,11 +102,16 @@ export default function (view) {
             dataType: 'json'
         }).then((result) => {
             Dashboard.hideLoadingMsg();
-            Dashboard.alert({ title: 'WatchNotify', message: result.Message });
+            const message = (result && result.Message) || 'No response.';
+            Dashboard.alert({
+                title: 'WatchNotify',
+                message: (result && result.Success ? 'Success: ' : 'Failed: ') + message
+            });
             refreshStatus();
-        }).catch(() => {
+        }).catch((err) => {
+            console.error('[WatchNotify] test request failed', err);
             Dashboard.hideLoadingMsg();
-            Dashboard.alert({ title: 'WatchNotify', message: 'The test request failed.' });
+            Dashboard.alert({ title: 'WatchNotify', message: 'Failed: the request did not complete.' });
         });
     }
 
@@ -142,6 +147,7 @@ export default function (view) {
                 view.querySelector('#JoplinAnchor').value = config.JoplinAnchor;
                 view.querySelector('#JoplinPosition').value = config.JoplinPosition;
                 view.querySelector('#JoplinEmptylineGap').value = config.JoplinEmptylineGap;
+                view.querySelector('#JoplinTimeoutSeconds').value = config.JoplinTimeoutSeconds;
                 view.querySelector('#JoplinAllUsers').checked = config.JoplinAllUsers;
                 renderUserList(joplinUserList, users, config.JoplinUserIds);
 
@@ -184,6 +190,7 @@ export default function (view) {
             config.JoplinAnchor = view.querySelector('#JoplinAnchor').value;
             config.JoplinPosition = view.querySelector('#JoplinPosition').value;
             config.JoplinEmptylineGap = numberOr(view.querySelector('#JoplinEmptylineGap'), 0);
+            config.JoplinTimeoutSeconds = numberOr(view.querySelector('#JoplinTimeoutSeconds'), 600);
             config.JoplinAllUsers = view.querySelector('#JoplinAllUsers').checked;
             config.JoplinUserIds = readUserList(joplinUserList);
 

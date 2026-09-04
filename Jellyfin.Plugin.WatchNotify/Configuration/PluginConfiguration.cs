@@ -117,6 +117,12 @@ public class PluginConfiguration : BasePluginConfiguration
     public int JoplinEmptylineGap { get; set; }
 
     /// <summary>
+    /// Gets or sets how long a single Joplin request may take. The insert can be
+    /// slow on a busy note, so this is generous by default.
+    /// </summary>
+    public int JoplinTimeoutSeconds { get; set; } = 600;
+
+    /// <summary>
     /// Gets or sets a value indicating whether every user is written to the watch log.
     /// </summary>
     public bool JoplinAllUsers { get; set; }

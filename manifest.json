@@ -8,6 +8,14 @@
         "category": "Notifications",
         "versions": [
             {
+                "version": "1.0.2.0",
+                "changelog": "Bound the Joplin test send to 30s, make the timeout configurable, and report test results unambiguously.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://raw.githubusercontent.com/Mikescher/jellyfin-watchnotify/master/releases/watchnotify_1.0.2.0.zip",
+                "checksum": "89e91cdcf74987e690d9c3e1dc33890e",
+                "timestamp": "2026-09-04T19:50:18Z"
+            },
+            {
                 "version": "1.0.1.0",
                 "changelog": "Fix a 500 on the status endpoint and a broken settings page that never populated its fields.",
                 "targetAbi": "10.11.0.0",

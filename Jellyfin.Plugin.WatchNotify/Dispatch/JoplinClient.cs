@@ -20,8 +20,6 @@ public sealed class JoplinClient
     /// </summary>
     private const int TitleWidth = 45;
 
-    private static readonly TimeSpan RequestTimeout = TimeSpan.FromMinutes(10);
-
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<JoplinClient> _logger;
 
@@ -68,9 +66,14 @@ public sealed class JoplinClient
     /// </summary>
     /// <param name="config">The plugin configuration.</param>
     /// <param name="watchEvent">The finished watch.</param>
+    /// <param name="timeout">Overrides the configured request timeout.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task that completes once the line is inserted.</returns>
-    public async Task AppendAsync(PluginConfiguration config, WatchEvent watchEvent, CancellationToken cancellationToken)
+    public async Task AppendAsync(
+        PluginConfiguration config,
+        WatchEvent watchEvent,
+        TimeSpan? timeout,
+        CancellationToken cancellationToken)
     {
         var line = BuildLine(watchEvent);
 
@@ -86,7 +89,7 @@ public sealed class JoplinClient
             config.JoplinBaseUrl.TrimEnd('/') + "/notes/" + Uri.EscapeDataString(config.JoplinNoteId) + "/insert");
 
         using var client = _httpClientFactory.CreateClient(NamedClient.Default);
-        client.Timeout = RequestTimeout;
+        client.Timeout = timeout ?? TimeSpan.FromSeconds(Math.Max(1, config.JoplinTimeoutSeconds));
 
         using var message = new HttpRequestMessage(HttpMethod.Post, endpoint)
         {

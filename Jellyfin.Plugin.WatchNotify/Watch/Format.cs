@@ -42,6 +42,26 @@ public static class Format
     }
 
     /// <summary>
+    /// Renders an exception chain as one line. Network failures put the useful
+    /// detail ("Connection refused", "No route to host") in an inner exception.
+    /// </summary>
+    /// <param name="exception">The exception to describe.</param>
+    /// <returns>The joined message chain.</returns>
+    public static string Describe(Exception exception)
+    {
+        var messages = new List<string>();
+        for (Exception? current = exception; current is not null; current = current.InnerException)
+        {
+            if (!messages.Contains(current.Message, StringComparer.Ordinal))
+            {
+                messages.Add(current.Message);
+            }
+        }
+
+        return string.Join(" → ", messages);
+    }
+
+    /// <summary>
     /// Left-justifies a string to the given width, counted in codepoints so that
     /// non-BMP characters do not shift the column.
     /// </summary>

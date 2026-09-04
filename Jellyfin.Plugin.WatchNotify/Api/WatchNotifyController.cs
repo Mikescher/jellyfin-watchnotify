@@ -43,6 +43,12 @@ public class WatchNotifyController : ControllerBase
         _eventLog = eventLog;
     }
 
+    /// <summary>
+    /// A test must answer while someone is watching the dashboard, so it does not
+    /// inherit the generous timeout the background dispatch runs with.
+    /// </summary>
+    private static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(30);
+
     private static PluginConfiguration Config => Plugin.Instance?.Configuration ?? new PluginConfiguration();
 
     /// <summary>
@@ -136,7 +142,7 @@ public class WatchNotifyController : ControllerBase
                     return new TestResponse { Success = false, Message = "Joplin is not enabled or not fully configured." };
                 }
 
-                await _joplin.AppendAsync(config, watchEvent, cancellationToken).ConfigureAwait(false);
+                await _joplin.AppendAsync(config, watchEvent, TestTimeout, cancellationToken).ConfigureAwait(false);
             }
             else
             {
@@ -149,10 +155,10 @@ public class WatchNotifyController : ControllerBase
                 string.Equals(target, "scn", StringComparison.OrdinalIgnoreCase) ? EventKinds.ScnFailed : EventKinds.JoplinFailed,
                 watchEvent.User,
                 watchEvent.Title,
-                "Test failed: " + ex.Message,
+                "Test failed: " + Format.Describe(ex),
                 success: false);
 
-            return new TestResponse { Success = false, Message = ex.Message };
+            return new TestResponse { Success = false, Message = Format.Describe(ex) };
         }
 
         _eventLog.Add(

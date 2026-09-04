@@ -34,7 +34,7 @@ Dashboard → Plugins → WatchNotify.
 | Retry interval | `30` s | Delay between attempts after a failed send |
 | Notify on manual mark | off | Also notify when an item is marked played by hand |
 | SCN | off | Base url, user id, key, channel, priority, allowed users |
-| Joplin | off | Base url, token, note id, anchor, position, empty line gap, allowed users |
+| Joplin | off | Base url, token, note id, anchor, position, empty line gap, request timeout, allowed users |
 | Event log size | `500` | Entries kept for the plugin's Log tab |
 | Activity log | on | Mirror watched events and failures into Jellyfin's activity log |
 
