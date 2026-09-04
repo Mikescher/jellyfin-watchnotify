@@ -6,6 +6,15 @@
         "overview": "Notifies SCN and Joplin when a movie or episode is watched",
         "owner": "Mikescher",
         "category": "Notifications",
-        "versions": []
+        "versions": [
+            {
+                "version": "1.0.0.0",
+                "changelog": "First release: SCN push and Joplin watch log as a native Jellyfin plugin.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://raw.githubusercontent.com/Mikescher/jellyfin-watchnotify/master/releases/watchnotify_1.0.0.0.zip",
+                "checksum": "32fae6d036ea7ac38ddd83bbb0d5c660",
+                "timestamp": "2026-09-04T18:54:50Z"
+            }
+        ]
     }
 ]

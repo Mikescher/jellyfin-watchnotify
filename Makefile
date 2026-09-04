@@ -17,11 +17,11 @@ publish:
 package:
 	python3 scripts/package.py --changelog "$(CHANGELOG)"
 
-# Bumps the version, packages it and records it in manifest.json. Push the
-# resulting commit and the v<version> tag; CI builds the authoritative zip and
-# rewrites the manifest entry with that artifact's checksum.
+# Bumps the version, drops the zip in releases/ and records it in manifest.json,
+# which points at the raw file in this repo. Commit and push the result; the
+# checksum only matches the zip that is committed alongside it.
 release:
-	python3 scripts/package.py --version "$(VERSION)" --changelog "$(CHANGELOG)" --manifest
+	python3 scripts/package.py --version "$(VERSION)" --changelog "$(CHANGELOG)" --manifest --in-repo
 
 # Drops the assembly into a local server. A folder without meta.json is still
 # loaded, so no packaging step is needed while iterating.

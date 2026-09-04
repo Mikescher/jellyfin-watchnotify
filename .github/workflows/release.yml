@@ -30,16 +30,16 @@ jobs:
           python3 scripts/package.py \
             --version "${{ steps.version.outputs.value }}" \
             --changelog "${{ github.event.head_commit.message }}" \
-            --manifest
+            --manifest --in-repo
 
       - name: Commit the manifest
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add manifest.json Directory.Build.props
+          git add manifest.json Directory.Build.props releases
           git diff --cached --quiet || git commit -m "Release ${{ steps.version.outputs.value }}"
           git push origin HEAD:master
 
       - uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/watchnotify_${{ steps.version.outputs.value }}.zip
+          files: releases/watchnotify_${{ steps.version.outputs.value }}.zip

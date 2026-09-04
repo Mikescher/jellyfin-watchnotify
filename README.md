@@ -90,9 +90,12 @@ server to pick up a new build.
 
 ```sh
 make release VERSION=1.0.1.0 CHANGELOG="what changed"
-git commit -am "Release 1.0.1.0" && git tag v1.0.1.0 && git push --tags
+git add -A && git commit -m "Release 1.0.1.0" && git push
 ```
 
-The tag push runs `.github/workflows/release.yml`, which rebuilds the zip, attaches it to a
-GitHub release and commits the matching `manifest.json` entry — the checksum has to come
-from the artifact that is actually uploaded, since the build is not byte-reproducible.
+The zip lives in `releases/` and `manifest.json` points at the raw file in this repo, so the
+zip and its checksum have to be committed together — the build is not byte-reproducible, and
+a manifest entry pointing at a differently-built zip fails the install.
+
+Tagging `v<version>` instead runs `.github/workflows/release.yml`, which does the same steps
+in CI and additionally attaches the zip to a GitHub release.
