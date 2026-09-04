@@ -12,6 +12,33 @@ function escapeHtml(s) {
     })[c]);
 }
 
+// jellyfin-web exposes LibraryMenu globally for plugin pages; without it the
+// page still works, so fall back to a plain link bar rather than failing.
+function setupTabs(view, selectedIndex) {
+    const tabs = [
+        { href: Dashboard.getConfigurationPageUrl('WatchNotify'), name: 'Settings' },
+        { href: Dashboard.getConfigurationPageUrl('WatchNotifyLog'), name: 'Log' }
+    ];
+
+    if (window.LibraryMenu && typeof window.LibraryMenu.setTabs === 'function') {
+        window.LibraryMenu.setTabs('watchnotify', selectedIndex, () => tabs);
+        return;
+    }
+
+    const container = view.querySelector('.content-primary');
+    if (!container || container.querySelector('.watchNotifyTabFallback')) {
+        return;
+    }
+
+    const bar = document.createElement('div');
+    bar.className = 'watchNotifyTabFallback';
+    bar.style.marginBottom = '1em';
+    bar.innerHTML = tabs.map((tab, index) => index === selectedIndex
+        ? '<strong style="margin-right: 1em;">' + escapeHtml(tab.name) + '</strong>'
+        : '<a style="margin-right: 1em;" href="' + escapeHtml(tab.href) + '">' + escapeHtml(tab.name) + '</a>').join('');
+    container.insertBefore(bar, container.firstChild);
+}
+
 function renderUserList(container, users, selectedIds) {
     const selected = new Set((selectedIds || []).map(normalizeId));
     container.innerHTML = users.map((user) =>
@@ -158,7 +185,10 @@ export default function (view) {
         });
     }
 
-    view.addEventListener('viewshow', load);
+    view.addEventListener('viewshow', function () {
+        setupTabs(view, 0);
+        load();
+    });
 
     view.querySelector('#TestScn').addEventListener('click', () => runTest('scn'));
     view.querySelector('#TestJoplin').addEventListener('click', () => runTest('joplin'));

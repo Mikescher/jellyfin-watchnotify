@@ -86,6 +86,27 @@ public class WatchNotifyController : ControllerBase
     }
 
     /// <summary>
+    /// Returns the plugin's own event log, newest first.
+    /// </summary>
+    /// <param name="limit">The maximum number of entries to return.</param>
+    /// <param name="kind">An optional kind to filter by.</param>
+    /// <returns>The matching entries.</returns>
+    [HttpGet("Events")]
+    public ActionResult<IReadOnlyList<LogEntry>> GetEvents([FromQuery] int? limit, [FromQuery] string? kind)
+        => Ok(_eventLog.GetEntries(limit, kind));
+
+    /// <summary>
+    /// Clears the plugin's own event log.
+    /// </summary>
+    /// <returns>No content.</returns>
+    [HttpDelete("Events")]
+    public ActionResult ClearEvents()
+    {
+        _eventLog.Clear();
+        return NoContent();
+    }
+
+    /// <summary>
     /// Sends a synthetic watch notification through one integration and reports the result.
     /// </summary>
     /// <param name="target">Either <c>scn</c> or <c>joplin</c>.</param>

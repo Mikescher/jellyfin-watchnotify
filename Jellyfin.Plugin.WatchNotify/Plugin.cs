@@ -57,5 +57,18 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             Name = "WatchNotify.js",
             EmbeddedResourcePath = prefix + ".Configuration.configPage.js",
         };
+
+        yield return new PluginPageInfo
+        {
+            Name = "WatchNotifyLog",
+            DisplayName = "WatchNotify Log",
+            EmbeddedResourcePath = prefix + ".Configuration.logPage.html",
+        };
+
+        yield return new PluginPageInfo
+        {
+            Name = "WatchNotifyLog.js",
+            EmbeddedResourcePath = prefix + ".Configuration.logPage.js",
+        };
     }
 }

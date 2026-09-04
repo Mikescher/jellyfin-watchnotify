@@ -1,5 +1,7 @@
 using System.Text.Json;
+using Jellyfin.Database.Implementations.Entities;
 using MediaBrowser.Common.Configuration;
+using MediaBrowser.Model.Activity;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.WatchNotify.Logging;
@@ -15,6 +17,18 @@ public sealed class EventLogStore : IDisposable
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = false };
 
+    /// <summary>
+    /// The kinds worth surfacing in Jellyfin's own activity log; the routine
+    /// bookkeeping kinds would only bury everything else there.
+    /// </summary>
+    private static readonly HashSet<string> ActivityKinds = new(StringComparer.Ordinal)
+    {
+        EventKinds.Watched,
+        EventKinds.ScnFailed,
+        EventKinds.JoplinFailed,
+    };
+
+    private readonly IActivityManager _activityManager;
     private readonly ILogger<EventLogStore> _logger;
     private readonly string _filePath;
     private readonly Lock _lock = new();
@@ -27,9 +41,11 @@ public sealed class EventLogStore : IDisposable
     /// Initializes a new instance of the <see cref="EventLogStore"/> class.
     /// </summary>
     /// <param name="applicationPaths">Server paths; the log lives under the data path.</param>
+    /// <param name="activityManager">Jellyfin's activity log.</param>
     /// <param name="logger">The logger.</param>
-    public EventLogStore(IApplicationPaths applicationPaths, ILogger<EventLogStore> logger)
+    public EventLogStore(IApplicationPaths applicationPaths, IActivityManager activityManager, ILogger<EventLogStore> logger)
     {
+        _activityManager = activityManager;
         _logger = logger;
 
         // Deliberately not the plugin's own data folder: that is versioned and
@@ -77,6 +93,37 @@ public sealed class EventLogStore : IDisposable
         }
 
         ScheduleSave();
+        MirrorToActivityLog(kind, user, item, detail, success);
+    }
+
+    private void MirrorToActivityLog(string kind, string? user, string? item, string? detail, bool success)
+    {
+        if (Plugin.Instance?.Configuration.WriteToActivityLog != true || !ActivityKinds.Contains(kind))
+        {
+            return;
+        }
+
+        var name = string.IsNullOrEmpty(user)
+            ? $"WatchNotify: {kind}"
+            : $"WatchNotify: {user} — {item}";
+
+        var entry = new ActivityLog(name, "WatchNotify" + kind, Guid.Empty)
+        {
+            ShortOverview = detail ?? string.Empty,
+            LogSeverity = success ? LogLevel.Information : LogLevel.Error,
+        };
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _activityManager.CreateAsync(entry).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not write an activity log entry");
+            }
+        });
     }
 
     /// <summary>

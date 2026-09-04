@@ -1,0 +1,47 @@
+<div id="watchNotifyLogPage" data-role="page" class="page type-interior pluginConfigurationPage withTabs"
+     data-controller="__plugin/WatchNotifyLog.js">
+    <div data-role="content">
+        <div class="content-primary">
+
+            <div class="verticalSection">
+                <h2 class="sectionTitle">Event log</h2>
+
+                <div class="selectContainer">
+                    <select is="emby-select" id="KindFilter" label="Kind">
+                        <option value="">All kinds</option>
+                    </select>
+                </div>
+
+                <label class="checkboxContainer">
+                    <input is="emby-checkbox" type="checkbox" id="AutoRefresh" checked />
+                    <span>Refresh every 10 seconds</span>
+                </label>
+
+                <button is="emby-button" type="button" id="RefreshLog" class="raised">
+                    <span>Refresh</span>
+                </button>
+                <button is="emby-button" type="button" id="ClearLog" class="raised">
+                    <span>Clear</span>
+                </button>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="tblWatchNotifyLog detailTable" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th class="detailTableHeaderCell">Time</th>
+                            <th class="detailTableHeaderCell">Kind</th>
+                            <th class="detailTableHeaderCell">User</th>
+                            <th class="detailTableHeaderCell">Item</th>
+                            <th class="detailTableHeaderCell">Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody id="LogRows"></tbody>
+                </table>
+            </div>
+
+            <p id="LogEmpty" class="fieldDescription hide">No events recorded yet.</p>
+
+        </div>
+    </div>
+</div>
