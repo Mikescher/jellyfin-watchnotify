@@ -32,8 +32,8 @@ DESCRIPTION = (
     "Watches playback events and, when a movie or episode is watched to completion, "
     "sends a Simple Cloud Notifier push and appends a line to a Joplin watch-log note."
 )
-TARGET_ABI = "10.11.0.0"
-FRAMEWORK = "net9.0"
+TARGET_ABI = "12.1.0.0"
+FRAMEWORK = "net10.0"
 REPO_URL = "https://github.com/Mikescher/jellyfin-watchnotify"
 RAW_URL = "https://raw.githubusercontent.com/Mikescher/jellyfin-watchnotify/master"
 

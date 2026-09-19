@@ -21,7 +21,7 @@ https://raw.githubusercontent.com/Mikescher/jellyfin-watchnotify/master/manifest
 ```
 
 Then install **WatchNotify** from the catalogue and restart the server. Requires Jellyfin
-10.11 or newer.
+12.1 or newer.
 
 ## Configuration
 

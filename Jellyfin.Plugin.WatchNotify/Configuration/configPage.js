@@ -195,6 +195,7 @@ export default function (view) {
                 view.querySelector('#JoplinPosition').value = config.JoplinPosition;
                 view.querySelector('#JoplinEmptylineGap').value = config.JoplinEmptylineGap;
                 view.querySelector('#JoplinTimeoutSeconds').value = config.JoplinTimeoutSeconds;
+                view.querySelector('#JoplinAllowInvalidCertificates').checked = config.JoplinAllowInvalidCertificates;
                 view.querySelector('#JoplinAllUsers').checked = config.JoplinAllUsers;
                 renderUserList(joplinUserList, users, config.JoplinUserIds);
 
@@ -238,6 +239,7 @@ export default function (view) {
             config.JoplinPosition = view.querySelector('#JoplinPosition').value;
             config.JoplinEmptylineGap = numberOr(view.querySelector('#JoplinEmptylineGap'), 0);
             config.JoplinTimeoutSeconds = numberOr(view.querySelector('#JoplinTimeoutSeconds'), 600);
+            config.JoplinAllowInvalidCertificates = view.querySelector('#JoplinAllowInvalidCertificates').checked;
             config.JoplinAllUsers = view.querySelector('#JoplinAllUsers').checked;
             config.JoplinUserIds = readUserList(joplinUserList);
 

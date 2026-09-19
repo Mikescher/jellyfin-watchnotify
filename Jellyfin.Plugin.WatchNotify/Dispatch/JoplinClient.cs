@@ -20,6 +20,12 @@ public sealed class JoplinClient
     /// </summary>
     private const int TitleWidth = 45;
 
+    private static readonly SocketsHttpHandler InsecureHandler = new()
+    {
+        PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+        SslOptions = { RemoteCertificateValidationCallback = (_, _, _, _) => true },
+    };
+
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<JoplinClient> _logger;
 
@@ -88,7 +94,9 @@ public sealed class JoplinClient
         var endpoint = new Uri(
             config.JoplinBaseUrl.TrimEnd('/') + "/notes/" + Uri.EscapeDataString(config.JoplinNoteId) + "/insert");
 
-        using var client = _httpClientFactory.CreateClient(NamedClient.Default);
+        using var client = config.JoplinAllowInvalidCertificates
+            ? new HttpClient(InsecureHandler, disposeHandler: false)
+            : _httpClientFactory.CreateClient(NamedClient.Default);
         client.Timeout = timeout ?? TimeSpan.FromSeconds(Math.Max(1, config.JoplinTimeoutSeconds));
 
         using var message = new HttpRequestMessage(HttpMethod.Post, endpoint)

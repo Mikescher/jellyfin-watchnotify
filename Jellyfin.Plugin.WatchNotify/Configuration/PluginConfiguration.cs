@@ -123,6 +123,12 @@ public class PluginConfiguration : BasePluginConfiguration
     public int JoplinTimeoutSeconds { get; set; } = 600;
 
     /// <summary>
+    /// Gets or sets a value indicating whether TLS certificate errors from the
+    /// Joplin server are ignored, for self-signed setups.
+    /// </summary>
+    public bool JoplinAllowInvalidCertificates { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether every user is written to the watch log.
     /// </summary>
     public bool JoplinAllUsers { get; set; }

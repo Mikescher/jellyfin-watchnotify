@@ -1,6 +1,6 @@
 PROJECT        = Jellyfin.Plugin.WatchNotify/Jellyfin.Plugin.WatchNotify.csproj
 ASSEMBLY       = Jellyfin.Plugin.WatchNotify
-FRAMEWORK      = net9.0
+FRAMEWORK      = net10.0
 VERSION       ?= $(shell sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props)
 CHANGELOG     ?=
 JELLYFIN_CONFIG ?= $(HOME)/.config/jellyfin

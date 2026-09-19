@@ -1,6 +1,6 @@
 # jellyfin-watchnotify
 
-A Jellyfin server plugin (`net9.0`, ABI `10.11.0.0`) that sends an SCN push and appends a
+A Jellyfin server plugin (`net10.0`, ABI `12.1.0.0`) that sends an SCN push and appends a
 Joplin watch-log line when a movie or episode is watched to completion.
 
 ## Layout
