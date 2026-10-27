@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/Mikescher/jellyfin-watchnotify/master/assets/logo.png",
         "versions": [
             {
+                "version": "1.0.6.0",
+                "changelog": "A brief replay of an already watched item no longer counts as a watch: the played-state fallback now needs the stopped playback to have reached the watched threshold, so pausing and finishing later, even in a new session, still counts.",
+                "targetAbi": "12.1.0.0",
+                "sourceUrl": "https://raw.githubusercontent.com/Mikescher/jellyfin-watchnotify/master/releases/watchnotify_1.0.6.0.zip",
+                "checksum": "5d0c42ad9279c7c930ad115a517b2229",
+                "timestamp": "2026-10-27T20:34:38Z"
+            },
+            {
                 "version": "1.0.5.0",
                 "changelog": "",
                 "targetAbi": "12.1.0.0",

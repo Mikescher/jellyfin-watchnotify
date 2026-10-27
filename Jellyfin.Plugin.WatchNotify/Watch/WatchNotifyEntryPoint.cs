@@ -227,6 +227,7 @@ public sealed class WatchNotifyEntryPoint : IHostedService, IDisposable
             ResolveUserId(e),
             e.Item.Id,
             DateTime.UtcNow,
+            e.PlaybackPositionTicks,
             TimeSpan.FromMinutes(Config.StartCoalesceMinutes));
     }
 
@@ -266,12 +267,7 @@ public sealed class WatchNotifyEntryPoint : IHostedService, IDisposable
             var userId = ResolveUserId(e);
             var sessionKey = SessionTracker.SessionKey(ResolveSessionId(e), e.Item.Id);
             var endUtc = DateTime.UtcNow;
-
-            if (!_tracker.TryPopStart(sessionKey, out var startUtc)
-                && !_tracker.TryPopStartForItem(userId, e.Item.Id, out startUtc))
-            {
-                startUtc = EstimateStart(endUtc, e.PlaybackPositionTicks);
-            }
+            var startUtc = _tracker.EndWatch(userId, e.Item.Id, sessionKey) ?? EstimateStart(endUtc, e.PlaybackPositionTicks);
 
             Complete(config, e.Item, userId, user, startUtc, endUtc, e.PlaybackPositionTicks, e.PlayedToCompletion, e.DeviceName, e.ClientName);
         }
@@ -296,13 +292,14 @@ public sealed class WatchNotifyEntryPoint : IHostedService, IDisposable
             {
                 case UserDataSaveReason.PlaybackFinished:
                     // Some clients report a natural end of file as a stop with no
-                    // position and no completion flag; this path catches those. It
-                    // runs late so a well-behaved stop event claims the watch first.
-                    _ = Task.Run(() => RunFallbackAsync(e, FallbackDelay, _cts.Token), CancellationToken.None);
+                    // position and no completion flag (the progress reports marked
+                    // the item played); this path catches those. It runs late so a
+                    // well-behaved stop event claims the watch first.
+                    _ = Task.Run(() => RunFallbackAsync(e, FallbackDelay, fromPlayback: true, _cts.Token), CancellationToken.None);
                     break;
 
                 case UserDataSaveReason.TogglePlayed when config.NotifyOnManualMarkWatched:
-                    _ = Task.Run(() => RunFallbackAsync(e, TimeSpan.Zero, _cts.Token), CancellationToken.None);
+                    _ = Task.Run(() => RunFallbackAsync(e, TimeSpan.Zero, fromPlayback: false, _cts.Token), CancellationToken.None);
                     break;
             }
         }
@@ -312,7 +309,7 @@ public sealed class WatchNotifyEntryPoint : IHostedService, IDisposable
         }
     }
 
-    private async Task RunFallbackAsync(UserDataSaveEventArgs e, TimeSpan delay, CancellationToken cancellationToken)
+    private async Task RunFallbackAsync(UserDataSaveEventArgs e, TimeSpan delay, bool fromPlayback, CancellationToken cancellationToken)
     {
         try
         {
@@ -333,14 +330,27 @@ public sealed class WatchNotifyEntryPoint : IHostedService, IDisposable
                 return;
             }
 
+            if (fromPlayback)
+            {
+                // Jellyfin keeps Played set while an already watched item is replayed
+                // and saves PlaybackFinished on every stop, so Played alone would count
+                // any brief replay.
+                var furthest = _tracker.FurthestPosition(e.UserId, item.Id);
+                var fraction = WatchEventFactory.Fraction(furthest, item.RunTimeTicks);
+                if (fraction < config.WatchedThreshold)
+                {
+                    _logger.LogDebug(
+                        "Fallback watch of {Item} ignored: its playback reached only {Percent}",
+                        item.Name,
+                        Format.Percent(fraction));
+                    return;
+                }
+            }
+
             var userName = _userManager.GetUserById(e.UserId)?.Username ?? string.Empty;
             var endUtc = DateTime.UtcNow;
             var positionTicks = e.UserData?.PlaybackPositionTicks ?? 0;
-
-            if (!_tracker.TryPopStartForItem(e.UserId, item.Id, out var startUtc))
-            {
-                startUtc = EstimateStart(endUtc, positionTicks);
-            }
+            var startUtc = _tracker.EndWatch(e.UserId, item.Id) ?? EstimateStart(endUtc, positionTicks);
 
             Complete(config, item, e.UserId, userName, startUtc, endUtc, positionTicks, playedToCompletion: true, device: null, client: null);
         }

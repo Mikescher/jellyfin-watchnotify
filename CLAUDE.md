@@ -17,7 +17,9 @@ Joplin watch-log line when a movie or episode is watched to completion.
 ## Key facts
 - "Watched" = `PlayedToCompletion || position/runtime >= WatchedThreshold` (0.90), Movie/Episode only.
 - `UserDataSaved(PlaybackFinished)` is a delayed second path for clients that under-report
-  the stop; it shares the dedup ledger, so a watch is notified once.
+  the stop; it shares the dedup ledger, so a watch is notified once. It needs the furthest
+  position of the item's latest tracked session to reach the threshold: Jellyfin keeps
+  `Played=true` while a watched item is replayed and saves `PlaybackFinished` on every stop.
 - SCN: form `POST` to the base url, fields `user_id`,`key`,`title`,`content`,`channel`,`priority`,`sender_name`,`msg_id`.
 - Joplin: `POST {base}/notes/{id}/insert`, Bearer auth, body `{content, search, position, search_emptyline_gap}`.
 - User allowlists hold Jellyfin user GUIDs; ids are compared with `Guid.TryParse` so either

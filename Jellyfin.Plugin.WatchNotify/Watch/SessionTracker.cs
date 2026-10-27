@@ -1,9 +1,10 @@
 namespace Jellyfin.Plugin.WatchNotify.Watch;
 
 /// <summary>
-/// Ephemeral in-memory state: playback start times keyed by session and item,
-/// and a ledger of recently-notified user and item pairs. All of it is lost on
-/// restart, which is acceptable for this use case.
+/// Ephemeral in-memory state: playback start times and furthest reported
+/// positions keyed by session and item, and a ledger of recently-notified user
+/// and item pairs. All of it is lost on restart, which is acceptable for this
+/// use case.
 /// </summary>
 public sealed class SessionTracker
 {
@@ -41,79 +42,84 @@ public sealed class SessionTracker
     /// <param name="userId">The watching user.</param>
     /// <param name="itemId">The item being played.</param>
     /// <param name="start">The event instant, in UTC.</param>
+    /// <param name="positionTicks">The playback position reported with the event.</param>
     /// <param name="coalesceWindow">The window within which an entry is reused.</param>
-    public void Record(string key, Guid userId, Guid itemId, DateTime start, TimeSpan coalesceWindow)
+    public void Record(string key, Guid userId, Guid itemId, DateTime start, long? positionTicks, TimeSpan coalesceWindow)
     {
         lock (_lock)
         {
             var now = DateTime.UtcNow;
+            var position = Math.Max(positionTicks ?? 0, 0);
             if (_sessions.TryGetValue(key, out var entry) && now - entry.LastSeen < coalesceWindow)
             {
                 _sessions[key] = entry with
                 {
                     Start = start < entry.Start ? start : entry.Start,
                     LastSeen = now,
+                    FurthestTicks = Math.Max(entry.FurthestTicks, position),
                 };
                 return;
             }
 
-            _sessions[key] = new SessionEntry(start, now, userId, itemId);
+            _sessions[key] = new SessionEntry(start, now, userId, itemId, position);
         }
     }
 
     /// <summary>
-    /// Returns and removes the recorded start time for a session key.
-    /// </summary>
-    /// <param name="key">The session key.</param>
-    /// <param name="start">The recorded start, in UTC.</param>
-    /// <returns>Whether a start time was recorded.</returns>
-    public bool TryPopStart(string key, out DateTime start)
-    {
-        lock (_lock)
-        {
-            if (_sessions.Remove(key, out var entry))
-            {
-                start = entry.Start;
-                return true;
-            }
-        }
-
-        start = default;
-        return false;
-    }
-
-    /// <summary>
-    /// Returns and removes the earliest recorded start time for a user and item,
-    /// across whichever session recorded it. Used by the paths that learn about a
-    /// finished watch without knowing its session.
+    /// Returns the furthest position reported by the most recently active
+    /// session of a user and item.
     /// </summary>
     /// <param name="userId">The watching user.</param>
     /// <param name="itemId">The item being played.</param>
-    /// <param name="start">The recorded start, in UTC.</param>
-    /// <returns>Whether a start time was recorded.</returns>
-    public bool TryPopStartForItem(Guid userId, Guid itemId, out DateTime start)
+    /// <returns>The furthest position, or null when no session is tracked.</returns>
+    public long? FurthestPosition(Guid userId, Guid itemId)
     {
         lock (_lock)
         {
-            string? match = null;
-            foreach (var (key, entry) in _sessions)
+            SessionEntry? latest = null;
+            foreach (var entry in _sessions.Values)
             {
                 if (entry.UserId == userId && entry.ItemId == itemId
-                    && (match is null || entry.Start < _sessions[match].Start))
+                    && (latest is null || entry.LastSeen > latest.LastSeen))
                 {
-                    match = key;
+                    latest = entry;
                 }
             }
 
-            if (match is not null && _sessions.Remove(match, out var found))
-            {
-                start = found.Start;
-                return true;
-            }
+            return latest?.FurthestTicks;
         }
+    }
 
-        start = default;
-        return false;
+    /// <summary>
+    /// Ends the watch of a user and item: drops every session tracked for them,
+    /// so none of them counts towards a later watch.
+    /// </summary>
+    /// <param name="userId">The watching user.</param>
+    /// <param name="itemId">The watched item.</param>
+    /// <param name="key">The session that finished the watch, if known.</param>
+    /// <returns>
+    /// The start of session <paramref name="key"/> if it is tracked, else the
+    /// earliest tracked start, else null.
+    /// </returns>
+    public DateTime? EndWatch(Guid userId, Guid itemId, string? key = null)
+    {
+        lock (_lock)
+        {
+            DateTime? own = key is not null && _sessions.Remove(key, out var session) ? session.Start : null;
+            DateTime? earliest = null;
+            foreach (var (otherKey, entry) in _sessions
+                         .Where(kv => kv.Value.UserId == userId && kv.Value.ItemId == itemId)
+                         .ToList())
+            {
+                _sessions.Remove(otherKey);
+                if (earliest is null || entry.Start < earliest)
+                {
+                    earliest = entry.Start;
+                }
+            }
+
+            return own ?? earliest;
+        }
     }
 
     /// <summary>
@@ -181,5 +187,5 @@ public sealed class SessionTracker
         }
     }
 
-    private sealed record SessionEntry(DateTime Start, DateTime LastSeen, Guid UserId, Guid ItemId);
+    private sealed record SessionEntry(DateTime Start, DateTime LastSeen, Guid UserId, Guid ItemId, long FurthestTicks);
 }

@@ -53,9 +53,12 @@ On playback stop for a Movie or Episode, the item counts as watched when Jellyfi
 
 Some clients report a natural end of file without setting `PlayedToCompletion` and with a
 zero position. A second path catches those: when Jellyfin saves user data with reason
-`PlaybackFinished` and the item ends up marked played, the watch is notified anyway. That
-path runs ten seconds late, because the server saves user data before it raises the stop
-event, and shares the dedup ledger with it, so a normal watch is never notified twice.
+`PlaybackFinished`, the item ends up marked played and the playback that just stopped had
+reported a position at or past the watched threshold, the watch is notified anyway. The
+position check matters because Jellyfin keeps an already watched item marked played while it
+is replayed, so opening it again for a few seconds must not count. That path runs ten seconds
+late, because the server saves user data before it raises the stop event, and shares the
+dedup ledger with it, so a normal watch is never notified twice.
 
 The watch **start** time comes from the matching playback start event, tracked in memory;
 the **end** time is the stop event. Session and dedup state are in-memory and reset on
